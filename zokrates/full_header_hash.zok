@@ -1,0 +1,35 @@
+import "hashes/keccak/keccak_eth_header" as keccak
+import "utils/casts/u64_to_bits" as u64_to_bits
+import "utils/casts/u32_from_bits" as u32_from_bits
+import "utils/casts/u32_to_bits" as u32_to_bits
+import "utils/casts/u64_from_bits" as u64_from_bits
+
+// hashes full rlp encoded eth block header.
+def main(u64[71] rlp_header) -> (u64[4]):
+    // actual length + 3 byte for rlp encoding of list
+    u32 byte_length = u32_from_bits([...[false; 16], ...u64_to_bits(rlp_header[0])[8..24]]) + 3
+    u32 position = byte_length / 8
+    u32 rest = byte_length % 8
+    position = if rest > 0 then position + 1 else position fi
+    u64 padding = \
+                if rest == 1 then 0x0000000000000100 else \
+                    if rest == 2 then 0x0000000000010000 else \
+                        if rest == 3 then 0x0000000001000000 else \
+                            if rest == 4 then 0x0000000100000000 else \
+                                if rest == 5 then 0x0000010000000000 else \
+                                    if rest == 6 then 0x0001000000000000 else \
+                                        if rest == 7 then 0x0100000000000000 else \
+                                            0x0000000000000001 \
+                                        fi\
+                                    fi\
+                                fi\
+                            fi\
+                        fi\
+                    fi\
+                fi
+
+    // TODO PROBLEM MIT ZOKRATES DASS ES SEHR GROSS WIRD, WENN MAN VARIABLE LENGTH FUER KECCAK HASH MACHT.
+    // VLLT LOESUNG: RLP HEADER IM CONTRACT HASHEN UND DANN MIT DEM 71*8BYTE HEADER HASH (0 BYTES PADDED) VOM ZOKRATES PROGRAMM ABGLEICHEN
+    u64[4] hash = keccak(rlp_header, padding, position)[..4]
+    return hash
+    

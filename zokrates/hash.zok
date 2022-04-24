@@ -1,0 +1,19 @@
+import "./witness_hashimoto.zok" as witness_hashimoto
+
+// def hash_header(u64[4] parent_hash, u64[4] parent_hash, u64[4] parent_hash, u64[4] parent_hash, u64[4] parent_hash, ) -> u64[4]:
+//     u64[4] header_hash = keccak256(header)
+//     return header_hash
+
+// todo function for calculating difficulty
+// todo function for rlp encoding
+
+// todo pass difficulty as parameter
+// todo calculate difficulty inside here from last block
+// todo pass whole header and hash inside here. Make at least last headerhash public
+// compare result/work with difficulty.
+def main(u64[4]header_hash, private u64 nonce, private u64 size, u32[8] merkle_root, private u32[64][2][16] values, private u32[64] indexes, private u32[64][24][8] proofs) -> (u64[4], u64[4]):
+// def main(u64[4]header_hash, private u64 nonce, private u64 size, u32[8] merkle_root, private u32[64][2][16] values, private u32[64] indexes, private u32[64][24][8] proofs) -> u64[4]:
+    // u32[8] hash = datasetitem_proof_verification(value, index, merkle_root, proof)
+    u64[4] digest, u64[4] result = witness_hashimoto(header_hash, nonce, size, merkle_root, values, indexes, proofs)
+    return digest, result
+    // return witness_hashimoto(header_hash, nonce, size, merkle_root, values, indexes, proofs)

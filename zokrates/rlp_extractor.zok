@@ -1,0 +1,95 @@
+import "utils/casts/u64_to_bits.zok" as u64_to_bits
+import "utils/casts/u64_from_bits.zok" as u64_from_bits
+import "utils/casts/u32_from_bits.zok" as u32_from_bits
+import "utils/casts/u8_from_bits.zok" as u8_from_bits
+import "utils/casts/u8_to_bits.zok" as u8_to_bits
+
+// https://eth.wiki/en/fundamentals/rlp
+
+// get next length
+// start_index is in byte vector
+// returns length in bytes
+def get_next_length(u32 start_index, u8[120] byte_vector) -> u32:
+    // right now only for 1-55byte strings and single values. length encoded in bytes
+    return if byte_vector[start_index] & 128 == 128 then u32_from_bits([...[false; 25], ...u8_to_bits(byte_vector[start_index])[1..8]]) else 0 fi
+
+// returns first value in vector and returns next index
+// assumes to extract difficulty (longer than 32 bits)
+def get_first_value(u8[120] byte_vector) -> (u64, u32):
+    u64 result = 0
+    u32 length = get_next_length(8, byte_vector)
+    u8[8] bytes = [0; 8]
+    // shouldn't need less than 32 bits for difficulty 
+    bytes = if length == 4 then [...bytes[0..4], ...byte_vector[9..13]] else bytes fi
+    bytes = if length == 5 then [...bytes[0..3], ...byte_vector[9..14]] else bytes fi
+    bytes = if length == 6 then [...bytes[0..2], ...byte_vector[9..15]] else bytes fi
+    bytes = if length == 7 then [...bytes[0..1], ...byte_vector[9..16]] else bytes fi
+    bytes = if length == 8 then byte_vector[9..17] else bytes fi
+    return u64_from_bits([...u8_to_bits(bytes[0]), ...u8_to_bits(bytes[1]), ...u8_to_bits(bytes[2]), ...u8_to_bits(bytes[3]), ...u8_to_bits(bytes[4]), ...u8_to_bits(bytes[5]), ...u8_to_bits(bytes[6]), ...u8_to_bits(bytes[7])]), length + 1 + 8
+
+// get next value.
+// returns the value and the new index
+// todo adjust if number, gas limit, and gas used is extracted. See comments inside function
+def get_next_value(u32 start_index, u8[120] byte_vector) -> (u64, u32):
+    u32 length = get_next_length(start_index, byte_vector)
+    u32 msb = 8 - length
+    u32 base_index = start_index + 1
+    // put in the start_index byte in case value < 128 (see https://eth.wiki/en/fundamentals/rlp)
+    u8[8] bytes = [...[0; 7], byte_vector[start_index]]
+    for u32 i in 0..8 do
+        bytes[i] = if i >= msb then byte_vector[base_index + (i - msb)] else bytes[i] fi
+    endfor
+    return u64_from_bits([...u8_to_bits(bytes[0]), ...u8_to_bits(bytes[1]), ...u8_to_bits(bytes[2]), ...u8_to_bits(bytes[3]), ...u8_to_bits(bytes[4]), ...u8_to_bits(bytes[5]), ...u8_to_bits(bytes[6]), ...u8_to_bits(bytes[7])]), (base_index + length)
+
+def get_8byte_value(u32 start_index, u8[120] byte_vector) -> (u64, u32):
+    return u64_from_bits([...u8_to_bits(byte_vector[start_index + 1]), ...u8_to_bits(byte_vector[start_index + 2]), ...u8_to_bits(byte_vector[start_index + 3]), ...u8_to_bits(byte_vector[start_index + 4]), ...u8_to_bits(byte_vector[start_index + 5]), ...u8_to_bits(byte_vector[start_index + 6]), ...u8_to_bits(byte_vector[start_index + 7]), ...u8_to_bits(byte_vector[start_index + 8])]), start_index + 9
+
+def get_32byte_value(u32 start_index, u8[120] byte_vector) -> (u64[4], u32):
+    u64[4] value = [0; 4]
+    for u32 i in 0..4 do
+        value[i] = u64_from_bits([...u8_to_bits(byte_vector[start_index + 1 + (i * 8)]), ...u8_to_bits(byte_vector[start_index + 2 + (i * 8)]), ...u8_to_bits(byte_vector[start_index + 3 + (i * 8)]), ...u8_to_bits(byte_vector[start_index + 4 + (i * 8)]), ...u8_to_bits(byte_vector[start_index + 5 + (i * 8)]), ...u8_to_bits(byte_vector[start_index + 6 + (i * 8)]), ...u8_to_bits(byte_vector[start_index + 7 + (i * 8)]), ...u8_to_bits(byte_vector[start_index + 8 + (i * 8)])])
+    endfor
+    return value, start_index + 33
+
+// extracts time, number, difficulty, mixdigest and nonce from new block header
+// todo include optional basefee?
+// todo extract also parent hash
+// todo only pass parts of the header that are relevant -> first 36bytes and the last 120bytes
+// see if this makes it more efficient
+def main(private u64[71] rlp_header) -> (u64, u64, u64, u64[4], u64):
+    // extract part of header that holds difficulty and time
+    bool[960] bit_vector = [false; 960]
+    for u32 i in 56..70 do
+        bit_vector = [...bit_vector[0..(i-56)*64], ...u64_to_bits(rlp_header[i]), ...bit_vector[(i-56+1)*64..960]]
+    endfor
+    bit_vector = [...bit_vector[0..896], ...u64_to_bits(rlp_header[70])]
+    
+    // insert 8 zeros at the start to avoid getting an access error due to get_next_value
+    u8[120] byte_vector = [0; 120]
+    for u32 i in 8..120 do
+        byte_vector[i] = u8_from_bits(bit_vector[(i-8) * 8..(i + 1 - 8) * 8])
+    endfor
+
+    // todo extract parent hash
+
+    // extract difficulty
+    u64 difficulty, u32 curr_rlp_index = get_first_value(byte_vector)
+    // extract number
+    u64 number, curr_rlp_index = get_next_value(curr_rlp_index, byte_vector)
+
+    // jump over gas used and gas limit
+    curr_rlp_index = curr_rlp_index + 1 + get_next_length(curr_rlp_index, byte_vector)
+    curr_rlp_index = curr_rlp_index + 1 + get_next_length(curr_rlp_index, byte_vector)
+
+    // extract time
+    u64 time, curr_rlp_index = get_next_value(curr_rlp_index, byte_vector)
+
+    // jump over extra data
+    curr_rlp_index = curr_rlp_index + 1 + get_next_length(curr_rlp_index, byte_vector)
+
+    // extract digest
+    u64[4] digest, curr_rlp_index = get_32byte_value(curr_rlp_index, byte_vector)
+
+    // extract nonce
+    u64 nonce, curr_rlp_index = get_next_value(curr_rlp_index, byte_vector)
+    return difficulty, time, number, digest, nonce

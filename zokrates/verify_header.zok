@@ -1,0 +1,15 @@
+// verifies if difficulty is correct created at time given the parents difficulty and time
+// verifies PoW and hashes the block.
+// todo question: should the hash of the new block be given or just hashed? -> would be easier to extract
+// todo question: verify number? or do that through contract?
+// todo question: verify nonce? or do that through contract?
+def main():
+    // SmartPool doesn't do it either https://github.com/SmartPool/contracts/blob/0729834a4debd41bf753055448bda51c13626034/Testpool.sol#L1437
+    // todo verify number
+    // SmartPool doesn't do it either
+
+    // todo verify time
+    // todo verify parenthash
+    // todo verify difficulty
+    // todo sealhash for witness_hashimoto
+    // todo verify enough PoW (use this approach https://github.com/chfast/ethash/blob/0467d3bbd82c918e4b7d74e609da2e23eefa17d1/lib/ethash/ethash.cpp#L338)
