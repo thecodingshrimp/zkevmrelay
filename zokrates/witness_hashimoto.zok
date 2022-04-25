@@ -419,6 +419,11 @@ const u64[2048] dataset_sizes = [1073739904, 1082130304, 1090514816, 1098906752,
 
 const u64 epoch_length = 30000
 
+const u32[2][8] merkle_roots = [
+    [0,0,0,0,0,0,0,0],
+    [739193817, 486250219, 1943314683, 2098445413, 2204553094, 2343564423, 1101274513, 268358908]
+]
+
 // fnv is an algorithm inspired by the FNV hash, which in some cases is used as
 // a non-associative substitute for XOR. Note that we multiply the prime with
 // the full 32-bit input, in contrast with the FNV-1 spec which multiplies the
@@ -438,7 +443,7 @@ def get_child_order(u32 bit, u32[16] children) -> u32[16]:
     return bit == 0 ? children : [...children[8..16], ...children[0..8]]
 
 // Note: value LE, index, merkle root and proof BE
-def datasetitem_proof_verification(u32[2][16] value, u32 index, u32[8] merkle_root, u32[24][8] proof) -> bool:
+def datasetitem_proof_verification(u32[2][16] value, u32 index, u32 epoch, u32[24][8] proof) -> bool:
     assert(index % 2 == 0)
     u32 hashIndex = index / 2
     u32[8] msb_hash = pedersen(value[0])
@@ -451,14 +456,15 @@ def datasetitem_proof_verification(u32[2][16] value, u32 index, u32[8] merkle_ro
         curr_children = get_child_order(curr_bit, [...hash, ...proof[24-i-1]])
         hash = pedersen(curr_children)
     endfor
-    assert(hash == merkle_root)
+    assert(hash == merkle_roots[epoch])
     return true
 
-// todo hardcode list of merkle_roots
 // Note: nonce = u64 little endian, header_hash = u64 big endian, values = u32 little endian
-def main(u64[4]header_hash, u64 nonce, u64 block_number, u32[8] merkle_root, private u32[64][2][16] values, private u32[64] indexes, private u32[64][24][8] proofs) -> (u64[4], u64[4]):
+def main(u64[4]header_hash, u64 nonce, u64 block_number, private u32[64][2][16] values, private u32[64] indexes, private u32[64][24][8] proofs) -> (u64[4], u64[4]):
+    u32 epoch = u32_from_bits(u64_to_bits(block_number / epoch_length)[32..64])
+    
     // todo calculdate size inside here?
-    u32 rows = u32_from_bits(u64_to_bits(dataset_sizes[u32_from_bits(u64_to_bits(block_number / epoch_length)[32..64])] / 128)[32..64])
+    u32 rows = u32_from_bits(u64_to_bits(dataset_sizes[epoch] / 128)[32..64])
 
     // seed in be
     u64[8] seed = keccak512([...header_hash, nonce])
@@ -487,7 +493,7 @@ def main(u64[4]header_hash, u64 nonce, u64 block_number, u32[8] merkle_root, pri
     // for u32 i in 0..1 do
         parent = fnv(i^seedHead, mix[i%32]) % rows
         assert(indexes[i] == parent * 2)
-        assert(datasetitem_proof_verification(values[i], indexes[i], merkle_root, proofs[i]))
+        assert(datasetitem_proof_verification(values[i], indexes[i], epoch, proofs[i]))
         mix = fnvHash(mix, [...values[i][0], ...values[i][1]])
     endfor
 
