@@ -1,15 +1,48 @@
+import "./rlp_extractor" as rlp_extractor
+import "./seal_hash" as seal_hasher
+import "./witness_hashimoto" as witness_hashimoto
+import "utils/casts/u64_to_field" as u64_to_field
+import "utils/casts/field_to_u64" as field_to_u64
+
+// taken from https://github.com/ethereum/go-ethereum/blob/d8ff53dfb8a516f47db37dbc7fd7ad18a1e8a125/consensus/ethash/consensus.go#L456
+// calculates frontier difficulty
+def calculate_difficulty(u64 parent_diff, u64 parent_time, u64 time, u64 block_number) -> u64:
+    // calculate x (H_d / 2048)
+    u64 adjust = parent_diff / 2048
+
+    u64 diff = if time - parent_time < 13 then parent_diff + adjust else parent_diff - adjust fi
+    // check if smaller than min difficulty
+    diff = if diff < 131072 then 131072 else diff fi
+
+    // todo add if we go over 100000 blocks.
+    // // add epsilon (2^(period_count - 2))
+    // period_count = block_number / 100000
+    // field exp_diff = u64_to_field(period_count) - 2
+    // exp_diff = 2 ** exp_diff
+    // diff = if period_count > 0 then diff + field_to_u64(exp_diff) else diff fi
+
+    // diff = if diff < 131072 then 131072 else diff fi
+    return diff
+
 // verifies if difficulty is correct created at time given the parents difficulty and time
 // verifies PoW and hashes the block.
-// todo question: should the hash of the new block be given or just hashed? -> would be easier to extract
-// todo question: verify number? or do that through contract?
-// todo question: verify nonce? or do that through contract?
-def main():
-    // SmartPool doesn't do it either https://github.com/SmartPool/contracts/blob/0729834a4debd41bf753055448bda51c13626034/Testpool.sol#L1437
-    // todo verify number
-    // SmartPool doesn't do it either
+def main(u64 parent_difficulty, u64 parent_time, u64[4] old_hash, private u64[71] rlp_header, private u32[64][2][16] values, private u32[64] indexes, private u32[64][24][8] proofs):
+    // extract values from rlp_header
+    u64 difficulty, u64 time, u64 number, u64[4] header_digest, u64 nonce = rlp_extractor(rlp_header)
 
-    // todo verify time
-    // todo verify parenthash
-    // todo verify difficulty
-    // todo sealhash for witness_hashimoto
+    // check correct time, otherwise new block is a future block
+    assert(time < old_time + 15)
+
+    // todo verify parenthash (extract it with rlp_extractor and get it passed as argument)
+    
+    // check for correct difficulty
+    u64 calculcated_difficulty = calculate_difficulty(parent_difficulty, parent_time, time, number)
+    assert(calculcated_difficulty == difficulty)
+
+    // hash block header for calculating the digest
+    u64[4] seal_hash = seal_hasher(rlp_header)
+    u64[4] calculated_digest, u64[4] work = witness_hashimoto(seal_hash, nonce, number, values, indexes, proofs)
+    assert(calculated_digest == header_digest)
+
     // todo verify enough PoW (use this approach https://github.com/chfast/ethash/blob/0467d3bbd82c918e4b7d74e609da2e23eefa17d1/lib/ethash/ethash.cpp#L338)
+    return
