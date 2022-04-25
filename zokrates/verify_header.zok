@@ -31,7 +31,7 @@ def main(u64 parent_difficulty, u64 parent_time, u64[4] old_hash, private u64[71
     u64 difficulty, u64 time, u64 number, u64[4] header_digest, u64 nonce = rlp_extractor(rlp_header)
 
     // check correct time, otherwise new block is a future block
-    assert(time < old_time + 15)
+    assert(time < parent_time + 15)
 
     // todo verify parenthash (extract it with rlp_extractor and get it passed as argument)
     
