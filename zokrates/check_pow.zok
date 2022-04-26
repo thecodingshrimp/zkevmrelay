@@ -1,0 +1,53 @@
+import "utils/casts/u64_from_bits" as u64_from_bits
+
+// taken from https://github.com/chfast/ethash/blob/ff5ae74fe7252fa2e990eb37328a22b116c87ed6/lib/ethash/ethash.cpp#L338
+def main(u64[4] final_hash, u64 difficulty) -> bool:
+    // convert final hash to little endian
+    u64[4] le_final_hash = [0; 4]
+    for u32 i in 0..4 do
+        le_final_hash[i] = final_hash[3 - i]
+    endfor
+
+    // compute p = h * d
+    u64[8] p = [0; 8]
+    // first round for d[0]
+    // very unlikely that difficulty will go over u64 so will only do first round
+    u64 k = 0
+    u64 xl = 0
+    u64 xh = 0
+    u64 yl = 0
+    u64 yh = 0
+    u64 t0 = 0
+    u64 t1 = 0
+    u64 t2 = 0
+    u64 t3 = 0
+    u64 u1 = 0
+    u64 u2 = 0
+    u64 lo = 0
+    u64 hi = 0
+    for u32 i in 0..4 do
+        xl = le_final_hash[i] & 0x00000000ffffffff
+        xh = le_final_hash[i] >> 32
+        yl = difficulty & 0x00000000ffffffff
+        yh = difficulty >> 32
+
+        t0 = xl * yl
+        t1 = xh * yl
+        t2 = xl * yh
+        t3 = xh * yh
+
+        u1 = t1 + (t0 >> 32)
+        u2 = t2 + (u1 & 0x00000000ffffffff)
+
+        lo = (u2 << 32) | (t0 & 0x00000000ffffffff)
+        hi = t3 + (u2 >> 32) + (u1 >> 32)
+
+        p[i] = lo + k
+        // todo is that correct?
+        k = hi + u64_from_bits([...[false; 63], p[i] < k])
+    endfor
+    p[4] = k
+
+    // check if p <= 2^256
+    assert((p[7] | p[6] | p[5] | p[4] == 0) || ((p[3] | p[2] | p[1] | p[0] == 0) && (((p[7] | p[6] | p[5]) == 0) && (p[4] == 1))))
+    return true
