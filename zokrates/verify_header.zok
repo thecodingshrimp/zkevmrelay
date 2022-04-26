@@ -1,48 +1,38 @@
 import "./rlp_extractor" as rlp_extractor
 import "./seal_hash" as seal_hasher
 import "./witness_hashimoto" as witness_hashimoto
-import "utils/casts/u64_to_field" as u64_to_field
-import "utils/casts/field_to_u64" as field_to_u64
-
-// taken from https://github.com/ethereum/go-ethereum/blob/d8ff53dfb8a516f47db37dbc7fd7ad18a1e8a125/consensus/ethash/consensus.go#L456
-// calculates frontier difficulty
-def calculate_difficulty(u64 parent_diff, u64 parent_time, u64 time, u64 block_number) -> u64:
-    // calculate x (H_d / 2048)
-    u64 adjust = parent_diff / 2048
-
-    u64 diff = if time - parent_time < 13 then parent_diff + adjust else parent_diff - adjust fi
-    // check if smaller than min difficulty
-    diff = if diff < 131072 then 131072 else diff fi
-
-    // todo add if we go over 100000 blocks.
-    // // add epsilon (2^(period_count - 2))
-    // period_count = block_number / 100000
-    // field exp_diff = u64_to_field(period_count) - 2
-    // exp_diff = 2 ** exp_diff
-    // diff = if period_count > 0 then diff + field_to_u64(exp_diff) else diff fi
-
-    // diff = if diff < 131072 then 131072 else diff fi
-    return diff
+import "./difficulty_calculator" as difficulty_calculator
+import "./check_pow" as check_pow
+import "./swap_endianness" as swap_endianness
 
 // verifies if difficulty is correct created at time given the parents difficulty and time
 // verifies PoW and hashes the block.
-def main(u64 parent_difficulty, u64 parent_time, u64[4] old_hash, private u64[71] rlp_header, private u32[64][2][16] values, private u32[64] indexes, private u32[64][24][8] proofs):
+// todo pass the new header hash? or just return it?
+def main(u64 parent_difficulty, u64 parent_time, u64[4] parent_hash, private u64[71] rlp_header, private u32[64][2][16] values, private u32[64] indexes, private u32[64][24][8] proofs):
     // extract values from rlp_header
     u64 difficulty, u64 time, u64 number, u64[4] header_digest, u64 nonce = rlp_extractor(rlp_header)
 
     // check correct time, otherwise new block is a future block
-    assert(time < parent_time + 15)
+    // does not apply to frontier apparently
+    // assert(time < parent_time + 15)
 
     // todo verify parenthash (extract it with rlp_extractor and get it passed as argument)
     
     // check for correct difficulty
-    u64 calculcated_difficulty = calculate_difficulty(parent_difficulty, parent_time, time, number)
+    u64 calculcated_difficulty = difficulty_calculator(parent_difficulty, parent_time, time, number)
     assert(calculcated_difficulty == difficulty)
 
-    // hash block header for calculating the digest
+    // hash block header w/o digest and nonce for calculating the digest
     u64[4] seal_hash = seal_hasher(rlp_header)
-    u64[4] calculated_digest, u64[4] work = witness_hashimoto(seal_hash, nonce, number, values, indexes, proofs)
-    assert(calculated_digest == header_digest)
 
-    // todo verify enough PoW (use this approach https://github.com/chfast/ethash/blob/0467d3bbd82c918e4b7d74e609da2e23eefa17d1/lib/ethash/ethash.cpp#L338)
+    // convert nonce to little endian
+    nonce = swap_endianness(nonce)
+
+    // calc digest and work.
+    u64[4] calculated_digest, u64[4] work = witness_hashimoto(seal_hash, nonce, number, values, indexes, proofs)
+
+    // check if calculated digest is correct and work is enough
+    assert(calculated_digest == header_digest)
+    assert(check_pow(work, difficulty))
+    // TODO HASH THE WHOLE HEADER?
     return

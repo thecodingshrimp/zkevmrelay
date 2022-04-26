@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/ethereum/go-ethereum v1.10.16
 	github.com/stretchr/testify v1.7.0
-	github.com/thecodingshrimp/ethash-merkle-tree-go v0.0.0-20220413092325-8a43f4a00448
+	github.com/thecodingshrimp/ethash-merkle-tree-go v0.0.0-20220426071215-b237d04c97eb
 	go.uber.org/zap v1.21.0
 	golang.org/x/crypto v0.0.0-20220315160706-3147a52a75dd
 )

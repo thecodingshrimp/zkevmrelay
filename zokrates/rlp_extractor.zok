@@ -29,7 +29,6 @@ def get_first_value(u8[120] byte_vector) -> (u64, u32):
 
 // get next value.
 // returns the value and the new index
-// todo adjust if number, gas limit, and gas used is extracted. See comments inside function
 def get_next_value(u32 start_index, u8[120] byte_vector) -> (u64, u32):
     u32 length = get_next_length(start_index, byte_vector)
     u32 msb = 8 - length
@@ -53,9 +52,8 @@ def get_32byte_value(u32 start_index, u8[120] byte_vector) -> (u64[4], u32):
 
 // extracts time, number, difficulty, mixdigest and nonce from new block header
 // todo include optional basefee?
-// todo extract also parent hash
-// todo only pass parts of the header that are relevant -> first 36bytes and the last 120bytes
-// see if this makes it more efficient
+// TODO extract also parent hash
+// TODO only pass parts of the header that are relevant -> first 36bytes and the last 120bytes (if we want to validate batches)
 def main(private u64[71] rlp_header) -> (u64, u64, u64, u64[4], u64):
     // extract part of header that holds difficulty and time
     bool[960] bit_vector = [false; 960]
@@ -70,7 +68,7 @@ def main(private u64[71] rlp_header) -> (u64, u64, u64, u64[4], u64):
         byte_vector[i] = u8_from_bits(bit_vector[(i-8) * 8..(i + 1 - 8) * 8])
     endfor
 
-    // todo extract parent hash
+    // TODO extract parent hash
 
     // extract difficulty
     u64 difficulty, u32 curr_rlp_index = get_first_value(byte_vector)

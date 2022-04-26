@@ -1,0 +1,17 @@
+import "utils/casts/u64_to_bits" as u64_to_bits
+import "utils/casts/u64_from_bits" as u64_from_bits
+import "utils/casts/u8_from_bits" as u8_from_bits
+import "utils/casts/u8_to_bits" as u8_to_bits
+
+// swaps endianness
+def main(u64 item) -> u64:
+    bool[64] bits = u64_to_bits(item)
+    u8[8] bytes = [0; 8]
+    for u32 i in 0..8 do
+        bytes[i] = u8_from_bits(bits[i*8..(i+1)*8])
+    endfor
+    u8[8] swapped_bytes = [0; 8]
+    for u32 i in 0..8 do
+        swapped_bytes[i] = bytes[7-i]
+    endfor
+    return u64_from_bits([...u8_to_bits(swapped_bytes[0]), ...u8_to_bits(swapped_bytes[1]), ...u8_to_bits(swapped_bytes[2]), ...u8_to_bits(swapped_bytes[3]), ...u8_to_bits(swapped_bytes[4]), ...u8_to_bits(swapped_bytes[5]), ...u8_to_bits(swapped_bytes[6]), ...u8_to_bits(swapped_bytes[7])])

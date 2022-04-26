@@ -19,7 +19,7 @@ import (
 func TestWitnessHashimoto(t *testing.T) {
 	test := isLittleEndian()
 	log.Println(test)
-	BLOCK_NR := uint64(1)
+	BLOCK_NR := uint64(30000)
 	geth, err := ethclient.Dial("http://localhost:8545")
 	assert.Nil(t, err)
 	head, err := geth.HeaderByNumber(context.Background(), big.NewInt(int64(BLOCK_NR)))
@@ -42,7 +42,7 @@ func TestWitnessHashimoto(t *testing.T) {
 	log.Println(headerHashString)
 	log.Println(binary.LittleEndian.Uint64(head.Nonce[:]))
 	logger, _ := zap.NewDevelopment()
-	digest, work, datasetIndexes := hashimotoLight(calcDatasetSize(30000/epochLength), cache, headerHash.Bytes(), head.Nonce.Uint64())
+	digest, work, datasetIndexes := hashimotoLight(calcDatasetSize(int(BLOCK_NR/epochLength)), cache, headerHash.Bytes(), head.Nonce.Uint64())
 	merkleTree := ethashmerkletree.NewMerkleTree("./", int(BLOCK_NR), false, 0, logger)
 	merkleProofs := make([]ethashmerkletree.MerkleProof, len(datasetIndexes))
 	var (
@@ -61,7 +61,7 @@ func TestWitnessHashimoto(t *testing.T) {
 
 		for _, value := range values {
 			for j := 0; j < len(value); j += 4 {
-				u32Values = fmt.Sprintf("%s %d", u32Values, binary.LittleEndian.Uint32(value[j:j+4]))
+				u32Values = fmt.Sprintf("%s %d", u32Values, binary.BigEndian.Uint32(value[j:j+4]))
 			}
 		}
 		for _, element := range proof {
@@ -73,10 +73,10 @@ func TestWitnessHashimoto(t *testing.T) {
 	for j := 0; j < len(merkleTree.Hashes[0]); j += 4 {
 		u32MTRoot = fmt.Sprintf("%s %d", u32MTRoot, binary.BigEndian.Uint32(merkleTree.Hashes[0][j:j+4]))
 	}
-	holyStringer := fmt.Sprintf("%s %d %d %s %s %s %s", headerHashString, binary.LittleEndian.Uint64(head.Nonce[:]), calcDatasetSize(30000/epochLength), u32MTRoot, u32Values, u32Indexes, u32Proof)
+	holyStringer := fmt.Sprintf("%s %d %d %s %s %s %s", headerHashString, binary.LittleEndian.Uint64(head.Nonce[:]), BLOCK_NR, u32MTRoot, u32Values, u32Indexes, u32Proof)
 	log.Println(holyStringer)
 	start = time.Now()
-	digestThroughWitness, workThroughWitness := witnessHashimoto(headerHash.Bytes(), head.Nonce.Uint64(), calcDatasetSize(30000/epochLength), merkleTree.Hashes[0], merkleProofs)
+	digestThroughWitness, workThroughWitness := witnessHashimoto(headerHash.Bytes(), head.Nonce.Uint64(), calcDatasetSize(int(BLOCK_NR/epochLength)), merkleTree.Hashes[0], merkleProofs)
 	log.Println("Hashing with witness took", time.Since(start))
 	assert.Equal(t, digest, digestThroughWitness)
 	assert.Equal(t, work, workThroughWitness)

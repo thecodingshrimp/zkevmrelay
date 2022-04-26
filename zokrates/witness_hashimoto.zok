@@ -453,7 +453,7 @@ def datasetitem_proof_verification(u32[2][16] value, u32 index, u32 epoch, u32[2
     u32[16] curr_children = [0; 16]
     for u32 i in 0..24 do
         curr_bit = hashIndex >> i & 1
-        curr_children = get_child_order(curr_bit, [...hash, ...proof[24-i-1]])
+        curr_children = get_child_order(curr_bit, [...hash, ...proof[23-i]])
         hash = pedersen(curr_children)
     endfor
     assert(hash == merkle_roots[epoch])
@@ -462,8 +462,7 @@ def datasetitem_proof_verification(u32[2][16] value, u32 index, u32 epoch, u32[2
 // Note: nonce = u64 little endian, header_hash = u64 big endian, values = u32 little endian
 def main(u64[4]header_hash, u64 nonce, u64 block_number, private u32[64][2][16] values, private u32[64] indexes, private u32[64][24][8] proofs) -> (u64[4], u64[4]):
     u32 epoch = u32_from_bits(u64_to_bits(block_number / epoch_length)[32..64])
-    
-    // todo calculdate size inside here?
+
     u32 rows = u32_from_bits(u64_to_bits(dataset_sizes[epoch] / 128)[32..64])
 
     // seed in be
@@ -490,7 +489,6 @@ def main(u64[4]header_hash, u64 nonce, u64 block_number, private u32[64][2][16] 
     // mix hash with dataset items
     u32 parent = 0
     for u32 i in 0..64 do
-    // for u32 i in 0..1 do
         parent = fnv(i^seedHead, mix[i%32]) % rows
         assert(indexes[i] == parent * 2)
         assert(datasetitem_proof_verification(values[i], indexes[i], epoch, proofs[i]))
@@ -505,8 +503,8 @@ def main(u64[4]header_hash, u64 nonce, u64 block_number, private u32[64][2][16] 
     endfor
 
     // make compressed mix le and 64byte array in variable digest
-    bool[64] curr_mix_bits = [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false]
-    u64[4] digest = [0,0,0,0]
+    bool[64] curr_mix_bits = [false; 64]
+    u64[4] digest = [0; 4]
     for u32 i in 0..4 do
         curr_mix_bits = [...u32_to_bits(mix[i*2]), ...u32_to_bits(mix[i*2+1])]
         digest[i] = u64_from_bits([...curr_mix_bits[24..32], ...curr_mix_bits[16..24], ...curr_mix_bits[8..16], ...curr_mix_bits[0..8], ...curr_mix_bits[56..64], ...curr_mix_bits[48..56], ...curr_mix_bits[40..48], ...curr_mix_bits[32..40]])

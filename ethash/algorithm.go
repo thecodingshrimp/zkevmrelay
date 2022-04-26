@@ -84,7 +84,7 @@ func witnessHashimoto(hash []byte, nonce uint64, size uint64, merkleRoot []byte,
 		for k := 0; k < mixBytes/hashBytes; k++ {
 			baseIndex := k * hashWords
 			for j := baseIndex; j < hashWords*(k+1); j++ {
-				datasetItemValues[i][j] = binary.LittleEndian.Uint32(proof.Values[k][(j-baseIndex)*4 : ((j-baseIndex)*4)+4])
+				datasetItemValues[i][j] = binary.BigEndian.Uint32(proof.Values[k][(j-baseIndex)*4 : ((j-baseIndex)*4)+4])
 			}
 		}
 	}
@@ -133,7 +133,7 @@ func hashimoto(hash []byte, nonce uint64, size uint64, lookup func(index uint32)
 	for i := 0; i < len(mix); i++ {
 		mix[i] = binary.LittleEndian.Uint32(seed[i%16*4:])
 	}
-	fmt.Println(mix)
+
 	// Mix in random dataset nodes
 	temp := make([]uint32, len(mix))
 
