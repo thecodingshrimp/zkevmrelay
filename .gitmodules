@@ -1,0 +1,3 @@
+[submodule "ZoKrates"]
+	path = ZoKrates
+	url = git@github.com:thecodingshrimp/ZoKrates.git
