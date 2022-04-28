@@ -3,6 +3,7 @@ import "utils/casts/u64_to_bits" as u64_to_bits
 import "utils/casts/u32_from_bits" as u32_from_bits
 import "utils/casts/u32_to_bits" as u32_to_bits
 import "utils/casts/u64_from_bits" as u64_from_bits
+import "utils/casts/field_to_u64" as field_to_u64
 
 // see SealHash function at https://github.com/ethereum/go-ethereum/blob/7ae6c4a79006ce27b19f144be09af8211c7055e5/consensus/ethash/consensus.go
 // seal_hash returns the hash of a block prior to it being sealed.
@@ -15,7 +16,8 @@ def main(u64[71] rlp_header) -> (u64[4]):
     u32 position = byte_length / 8
     u32 rest = byte_length % 8
     position = if rest > 0 then position + 1 else position fi
-    // todo probiere rest mit shift zu ermitteln
+
+    // can't use shifting here since shifting can only occur with static values
     u64 padding = \
                 if rest == 1 then 0x0000000000000100 else \
                     if rest == 2 then 0x0000000000010000 else \
@@ -34,7 +36,6 @@ def main(u64[71] rlp_header) -> (u64[4]):
                 fi
 
     u32 last_position = position - 1
-    // todo hier dasselbe (shift)
     rlp_header_wo_digest_nonce[last_position] = \
                 if rest == 1 then rlp_header_wo_digest_nonce[last_position] & 0xff00000000000000 else \
                     if rest == 2 then rlp_header_wo_digest_nonce[last_position] & 0xffff000000000000 else \
@@ -55,6 +56,5 @@ def main(u64[71] rlp_header) -> (u64[4]):
     // TODO PROBLEM MIT ZOKRATES DASS ES SEHR GROSS WIRD, WENN MAN VARIABLE LENGTH FUER KECCAK HASH MACHT.
     // VLLT LOESUNG: RLP HEADER IM CONTRACT HASHEN UND DANN MIT DEM 71*8BYTE HEADER HASH (0 BYTES PADDED) VOM ZOKRATES PROGRAMM ABGLEICHEN
     u64[4] hash = keccak(rlp_header_wo_digest_nonce, padding, position)[..4]
-    // u64[4] hash = [0;4]
     return hash
     
