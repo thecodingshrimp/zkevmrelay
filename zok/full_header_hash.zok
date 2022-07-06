@@ -1,15 +1,13 @@
-import "hashes/keccak/keccak_eth_header" as keccak
+import "./keccak_eth_header" as keccak
 import "utils/casts/u64_to_bits" as u64_to_bits
 import "utils/casts/u32_from_bits" as u32_from_bits
 import "utils/casts/u32_to_bits" as u32_to_bits
 import "utils/casts/u64_from_bits" as u64_from_bits
 
 // hashes full rlp encoded eth block header.
-def main(u64[71] rlp_header) -> (u64[4]):
-    // actual length + 3 byte for rlp encoding of list
-    u32 byte_length = u32_from_bits([...[false; 16], ...u64_to_bits(rlp_header[0])[8..24]]) + 3
-    u32 position = byte_length / 8
-    u32 rest = byte_length % 8
+def main(u64[71] rlp_header, u32 byte_length_with_rlp) -> (u64[4]):
+    u32 position = byte_length_with_rlp / 8
+    u32 rest = byte_length_with_rlp % 8
     position = if rest > 0 then position + 1 else position fi
     u64 padding = \
                 if rest == 1 then 0x0000000000000100 else \

@@ -1,0 +1,27 @@
+import "hashes/pedersen/512bit.zok" as pedersen
+
+const u32[2][8] merkle_roots = [
+    [0,0,0,0,0,0,0,0],
+    [739193817, 486250219, 1943314683, 2098445413, 2204553094, 2343564423, 1101274513, 268358908]
+]
+
+// returns correct child order of a merkle tree node given the traversal bit of the first value
+def get_child_order(u32 bit, u32[16] children) -> u32[16]:
+    return bit == 0 ? children : [...children[8..16], ...children[0..8]]
+
+// Note: value LE, index, merkle root and proof BE
+def main(u32[32] value, u32 index, u32 epoch, u32[24][8] proof) -> bool:
+    assert(index % 2 == 0)
+    u32 hashIndex = index / 2
+    u32[8] msb_hash = pedersen(value[0..16])
+    u32[8] lsb_hash = pedersen(value[16..32])
+    u32[8] hash = pedersen([...msb_hash, ...lsb_hash])
+    u32 curr_bit = 0
+    u32[16] curr_children = [0; 16]
+    for u32 i in 0..24 do
+        curr_bit = hashIndex >> i & 1
+        curr_children = get_child_order(curr_bit, [...hash, ...proof[23-i]])
+        hash = pedersen(curr_children)
+    endfor
+    assert(hash == merkle_roots[epoch])
+    return true

@@ -4,26 +4,27 @@ import "./witness_hashimoto" as witness_hashimoto
 import "./difficulty_calculator" as difficulty_calculator
 import "./check_pow" as check_pow
 import "./swap_endianness" as swap_endianness
+import "./full_header_hash" as full_header_hash
 
 // verifies if difficulty is correct created at time given the parents difficulty and time
 // verifies PoW and hashes the block.
-// todo pass the new header hash? or just return it?
-def main(u64 parent_difficulty, u64 parent_time, u64[4] parent_hash, private u64[71] rlp_header, private u32[64][2][16] values, private u32[64] indexes, private u32[64][24][8] proofs):
+def main(u64 parent_difficulty, u64 parent_time, u64[4] parent_hash, private u64[71] rlp_header, private u32[64][32] values, private u32[64] indexes, private u32[64][24][8] proofs) -> (u64[4], u64, u64):
     // extract values from rlp_header
-    u64 difficulty, u64 time, u64 number, u64[4] header_digest, u64 nonce = rlp_extractor(rlp_header)
+    u32 byte_length_with_rlp, u64[4] extracted_parent_hash, u64 difficulty, u64 time, u64 number, u64[4] header_digest, u64 nonce = rlp_extractor(rlp_header)
 
     // check correct time, otherwise new block is a future block
     // does not apply to frontier apparently
     // assert(time < parent_time + 15)
 
-    // todo verify parenthash (extract it with rlp_extractor and get it passed as argument)
+    // check parent_hash
+    assert(parent_hash == extracted_parent_hash)
     
     // check for correct difficulty
     u64 calculcated_difficulty = difficulty_calculator(parent_difficulty, parent_time, time, number)
     assert(calculcated_difficulty == difficulty)
 
     // hash block header w/o digest and nonce for calculating the digest
-    u64[4] seal_hash = seal_hasher(rlp_header)
+    u64[4] seal_hash = seal_hasher(rlp_header, byte_length_with_rlp)
 
     // convert nonce to little endian
     nonce = swap_endianness(nonce)
@@ -34,5 +35,6 @@ def main(u64 parent_difficulty, u64 parent_time, u64[4] parent_hash, private u64
     // check if calculated digest is correct and work is enough
     assert(calculated_digest == header_digest)
     assert(check_pow(work, difficulty))
-    // TODO HASH THE WHOLE HEADER?
-    return
+
+    u64[4] header_hash = full_header_hash(rlp_header, byte_length_with_rlp)
+    return header_hash, difficulty, time

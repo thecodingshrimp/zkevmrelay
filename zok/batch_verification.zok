@@ -1,0 +1,10 @@
+import "./verify_header.zok" as verify_header
+
+def main(u64 parent_difficulty, u64 parent_time, u64[4] parent_hash, private u64[2][71] rlp_headers, private u32[2][64][32] values, private u32[2][64] indexes, private u32[2][64][24][8] proofs):
+    u64 curr_parent_diff = parent_difficulty
+    u64 curr_parent_time = parent_time
+    u64[4] curr_parent_hash = parent_hash
+    for u32 i in 0..2 do
+        curr_parent_hash, curr_parent_diff, curr_parent_time = verify_header(curr_parent_diff, curr_parent_time, curr_parent_hash, rlp_headers[i], values[i], indexes[i], proofs[i])
+    endfor
+    return
