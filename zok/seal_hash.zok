@@ -9,11 +9,13 @@ import "utils/casts/field_to_u64" as field_to_u64
 // see SealHash function at https://github.com/ethereum/go-ethereum/blob/7ae6c4a79006ce27b19f144be09af8211c7055e5/consensus/ethash/consensus.go
 // seal_hash returns the hash of a block prior to it being sealed.
 def main(u64[71] rlp_header, u32 byte_length_with_rlp) -> (u64[4]):
-    // actual length + 3 byte for rlp encoding of list - 42 bytes for mix digest and nonce at the end.
+    // actual length + 3 byte for rlp encoding length of list - 42 bytes for mix digest and nonce at the end.
+    u32 seal_length = byte_length_with_rlp - 42 - 3
     bool[64] first_64_bits = u64_to_bits(rlp_header[0])
-    u64[71] rlp_header_wo_digest_nonce = [u64_from_bits([...first_64_bits[0..8], ...u32_to_bits(byte_length_with_rlp - 45 - 3)[16..32], ...first_64_bits[24..64]]), ...rlp_header[1..71]]
-    u32 position = byte_length_with_rlp / 8
-    u32 rest = byte_length_with_rlp % 8
+    u64[71] rlp_header_wo_digest_nonce = [u64_from_bits([...first_64_bits[0..8], ...u32_to_bits(seal_length)[16..32], ...first_64_bits[24..64]]), ...rlp_header[1..71]]
+    seal_length = seal_length + 3
+    u32 position = seal_length / 8
+    u32 rest = seal_length % 8
     position = if rest > 0 then position + 1 else position fi
 
     // can't use shifting here since shifting can only occur with static values

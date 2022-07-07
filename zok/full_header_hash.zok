@@ -28,6 +28,6 @@ def main(u64[71] rlp_header, u32 byte_length_with_rlp) -> (u64[4]):
 
     // TODO PROBLEM MIT ZOKRATES DASS ES SEHR GROSS WIRD, WENN MAN VARIABLE LENGTH FUER KECCAK HASH MACHT.
     // VLLT LOESUNG: RLP HEADER IM CONTRACT HASHEN UND DANN MIT DEM 71*8BYTE HEADER HASH (0 BYTES PADDED) VOM ZOKRATES PROGRAMM ABGLEICHEN
-    u64[4] hash = keccak(rlp_header, padding, position)[..4]
+    u64[4] hash = keccak(rlp_header, padding, position)
     return hash
     

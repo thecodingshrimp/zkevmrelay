@@ -83,6 +83,10 @@ def keccakf(u64[25] st) -> u64[25]:
     return st
 
 def main<N, W>(u64[N] input, u64 pad) -> u64[W]:
+    // TODO what if input size % rate == 0? -> no padding -> restructure code.
+    // TODO or if input size % rate == 0 and there is padding.
+    // E.g. 544byte = u64[68] input -> needs no padding
+    // for reference see https://github.com/davidsteinsland/keccak/blob/master/keccak.c
     u64[25] q = [0; 25]
     u32 rate = (200 - (W * 16)) / 8
     u32 pt = 0
@@ -92,6 +96,10 @@ def main<N, W>(u64[N] input, u64 pad) -> u64[W]:
         input[i] = swap_u64(input[i])
     endfor
 
+    // add padding if necessary
+    input[N - 1] = pad != 0x0000000000000001 ? input[N - 1] ^ pad : input[N - 1]
+    input[N - 1] = N % rate == 0 && pad != 0x0000000000000001 ? input[N - 1] ^ 0x8000000000000000 : input[N - 1]
+
     // update
     for u32 i in 0..N do
         q[pt] = q[pt] ^ input[i]
@@ -99,12 +107,11 @@ def main<N, W>(u64[N] input, u64 pad) -> u64[W]:
         q = if pt == 0 then keccakf(q) else q fi
     endfor
 
-    pt = if pad == 0x0000000000000001 then pt else pt - 1 fi
-
-    // finalize
-    q[pt] = q[pt] ^ pad
-    q[rate - 1] = q[rate - 1] ^ 0x8000000000000000
-    q = keccakf(q)
+    // finalize with padding if N % rate > 0
+    u32 round = N % rate
+    q[pt] = pad == 0x0000000000000001 && round > 0 ? q[pt] ^ pad : q[pt]
+    q[rate - 1] = round > 0 ? q[rate - 1] ^ 0x8000000000000000 : q[rate - 1] 
+    q = round > 0 ? keccakf(q) : q
 
     // change endianness of output from little endian to big endian
     for u32 i in 0..W do

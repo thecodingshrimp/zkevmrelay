@@ -89,6 +89,15 @@ def main(u64[71] input, u64 pad, u32 ls8b) -> u64[4]:
         input[i] = swap_u64(input[i])
     endfor
 
+    // add padding if necessary
+    u32 round = ls8b % rate
+    input[ls8b - 1] = \
+                if pad != 0x0000000000000001 && round == 0 then (input[ls8b - 1] ^ pad) ^ 0x8000000000000000 else \
+                    if pad != 0x0000000000000001 then input[ls8b - 1] ^ pad else \
+                        input[ls8b - 1] \
+                    fi \
+                fi
+    
     // update
     for u32 i in 0..57 do
         q[pt] = q[pt] ^ input[i]
@@ -96,24 +105,20 @@ def main(u64[71] input, u64 pad, u32 ls8b) -> u64[4]:
         q = if pt == 0 then keccakf(q) else q fi
     endfor
 
-
     u64[25] q_2 = q
     u32 pt_2 = pt
     for u32 i in 57..71 do
-        q_2[pt_2] = q[pt_2] ^ input[i]
+        q_2[pt_2] = q_2[pt_2] ^ input[i]
         pt_2 = (pt_2 + 1) % rate
         q_2 = if pt_2 == 0 then keccakf(q_2) else q_2 fi
         q = if i < ls8b then q_2 else q fi
         pt = if i < ls8b then pt_2 else pt fi
     endfor
 
-    // if pad then start after last byte
-    pt = if pad != 0x0000000000000001 then pt - 1 else pt fi
-
     // finalize
-    q[pt] = q[pt] ^ pad
-    q[rate - 1] = q[rate - 1] ^ 0x8000000000000000
-    q = keccakf(q)
+    q[pt] = pad == 0x0000000000000001 && round > 0 ? q[pt] ^ pad : q[pt]
+    q[rate - 1] = round > 0 ? q[rate - 1] ^ 0x8000000000000000 : q[rate - 1]
+    q = round > 0 ? keccakf(q) : q
 
     // change endianness of output from little endian to big endian
     for u32 i in 0..4 do

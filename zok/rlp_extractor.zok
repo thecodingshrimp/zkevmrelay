@@ -52,7 +52,6 @@ def get_32byte_value(u32 start_index, u8[120] byte_vector) -> (u64[4], u32):
 
 // extracts time, number, difficulty, mixdigest and nonce from new block header
 // todo include optional basefee?
-// TODO extract also parent hash
 def main(private u64[71] rlp_header) -> (u32, u64[4], u64, u64, u64, u64[4], u64):
     bool[64] first_64_bits = u64_to_bits(rlp_header[0])
     u32 byte_length_with_rlp = u32_from_bits([...[false; 16], ...first_64_bits[8..24]]) + 3
@@ -62,7 +61,7 @@ def main(private u64[71] rlp_header) -> (u32, u64[4], u64, u64, u64, u64[4], u64
     u64[4] parent_hash = [u64_from_bits(parent_hash_bits[32..96]), u64_from_bits(parent_hash_bits[96..160]), u64_from_bits(parent_hash_bits[160..224]), u64_from_bits(parent_hash_bits[224..288])]
 
     // extract part of header that holds difficulty and time
-    // TODO try not to do it in for loop but hard coded
+    // TODO try not to do it in for loop but hard coded for better performance
     bool[960] bit_vector = [false; 960]
     for u32 i in 56..70 do
         bit_vector = [...bit_vector[0..(i-56)*64], ...u64_to_bits(rlp_header[i]), ...bit_vector[(i-56+1)*64..960]]

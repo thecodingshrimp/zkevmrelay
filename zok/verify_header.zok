@@ -4,16 +4,15 @@ import "./witness_hashimoto" as witness_hashimoto
 import "./difficulty_calculator" as difficulty_calculator
 import "./check_pow" as check_pow
 import "./swap_endianness" as swap_endianness
-import "./full_header_hash" as full_header_hash
 
 // verifies if difficulty is correct created at time given the parents difficulty and time
 // verifies PoW and hashes the block.
-def main(u64 parent_difficulty, u64 parent_time, u64[4] parent_hash, private u64[71] rlp_header, private u32[64][32] values, private u32[64] indexes, private u32[64][24][8] proofs) -> (u64[4], u64, u64):
+def main(u64 parent_difficulty, u64 parent_time, u64[4] parent_hash, private u64[71] rlp_header, private u32[64][32] values, private u32[64] indexes, private u32[64][24][8] proofs) -> (u32, u64, u64):
     // extract values from rlp_header
     u32 byte_length_with_rlp, u64[4] extracted_parent_hash, u64 difficulty, u64 time, u64 number, u64[4] header_digest, u64 nonce = rlp_extractor(rlp_header)
 
     // check correct time, otherwise new block is a future block
-    // does not apply to frontier apparently
+    // does not apply to frontier
     // assert(time < parent_time + 15)
 
     // check parent_hash
@@ -36,5 +35,4 @@ def main(u64 parent_difficulty, u64 parent_time, u64[4] parent_hash, private u64
     assert(calculated_digest == header_digest)
     assert(check_pow(work, difficulty))
 
-    u64[4] header_hash = full_header_hash(rlp_header, byte_length_with_rlp)
-    return header_hash, difficulty, time
+    return byte_length_with_rlp, difficulty, time
