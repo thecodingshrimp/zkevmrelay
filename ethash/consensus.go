@@ -14,7 +14,7 @@ import (
 // copied from https://github.com/ethereum/go-ethereum/blob/7ae6c4a79006ce27b19f144be09af8211c7055e5/consensus/ethash/consensus.go
 
 // SealHash returns the hash of a block prior to it being sealed.
-func SealHash(header *types.Header) (hash common.Hash) {
+func SealHash(header *types.Header) (hash common.Hash, encodedString string) {
 	hasher := sha3.NewLegacyKeccak256()
 
 	enc := []interface{}{
@@ -80,5 +80,5 @@ func SealHash(header *types.Header) (hash common.Hash) {
 
 	rlp.Encode(hasher, enc)
 	hasher.Sum(hash[:0])
-	return hash
+	return hash, rlp_64bit_encoded
 }

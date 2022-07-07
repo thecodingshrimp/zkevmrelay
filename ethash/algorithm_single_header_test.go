@@ -27,7 +27,7 @@ func TestWitnessHashimoto(t *testing.T) {
 	haha, _ := geth.HeaderByNumber(context.Background(), big.NewInt(int64(hehe)))
 	log.Println(haha.Number.Uint64())
 	assert.Nil(t, err)
-	headerHash := SealHash(head)
+	headerHash, _ := SealHash(head)
 	// generate cache
 	seed := ethash.SeedHash(BLOCK_NR)
 	cacheSize := calcCacheSize(int(BLOCK_NR) / epochLength)
