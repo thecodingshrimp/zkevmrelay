@@ -17,6 +17,7 @@ import (
 )
 
 func TestWitnessHashimoto(t *testing.T) {
+	logger, _ := zap.NewDevelopment()
 	test := isLittleEndian()
 	log.Println(test)
 	BLOCK_NR := uint64(30000)
@@ -27,7 +28,7 @@ func TestWitnessHashimoto(t *testing.T) {
 	haha, _ := geth.HeaderByNumber(context.Background(), big.NewInt(int64(hehe)))
 	log.Println(haha.Number.Uint64())
 	assert.Nil(t, err)
-	headerHash, _ := SealHash(head)
+	headerHash := SealHash(head, logger)
 	// generate cache
 	seed := ethash.SeedHash(BLOCK_NR)
 	cacheSize := calcCacheSize(int(BLOCK_NR) / epochLength)
@@ -41,7 +42,6 @@ func TestWitnessHashimoto(t *testing.T) {
 	}
 	log.Println(headerHashString)
 	log.Println(binary.LittleEndian.Uint64(head.Nonce[:]))
-	logger, _ := zap.NewDevelopment()
 	digest, work, datasetIndexes := hashimotoLight(calcDatasetSize(int(BLOCK_NR/epochLength)), cache, headerHash.Bytes(), head.Nonce.Uint64())
 	merkleTree := ethashmerkletree.NewMerkleTree("./", int(BLOCK_NR), false, 0, logger)
 	merkleProofs := make([]ethashmerkletree.MerkleProof, len(datasetIndexes))

@@ -1,4 +1,4 @@
-module zkethrelay
+module github.com/thecodingshrimp/zkevmrelay
 
 go 1.17
 

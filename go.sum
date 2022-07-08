@@ -390,8 +390,6 @@ github.com/stretchr/testify v1.7.0 h1:nwc3DEeHmmLAfoZucVR881uASk0Mfjw8xYJ99tb5Cc
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7 h1:epCh84lMvA70Z7CTTCmYQn2CKbY8j86K7/FAIr141uY=
 github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7/go.mod h1:q4W45IWZaF22tdD+VEXcAWRA037jwmWEB5VWYORlTpc=
-github.com/thecodingshrimp/ethash-merkle-tree-go v0.0.0-20220413092325-8a43f4a00448 h1:bDgMr6kkuV07/x/Yyy20BsKN39iVN48XjilPIx2LDAQ=
-github.com/thecodingshrimp/ethash-merkle-tree-go v0.0.0-20220413092325-8a43f4a00448/go.mod h1:TrBEiW++LkBQkXFiE81cPSNTR3RjKP7eDec0t9rAnxU=
 github.com/thecodingshrimp/ethash-merkle-tree-go v0.0.0-20220426071215-b237d04c97eb h1:AP4yK1XEfzn4nWHIVW3K3qfbrQ2mAWUW6uw52OuQ4vo=
 github.com/thecodingshrimp/ethash-merkle-tree-go v0.0.0-20220426071215-b237d04c97eb/go.mod h1:TrBEiW++LkBQkXFiE81cPSNTR3RjKP7eDec0t9rAnxU=
 github.com/thecodingshrimp/pedersen-go v0.0.0-20220321122653-9ac6c147e4c4 h1:AnMsfe2TGW0Xv0mj2TI8tNVjn8mRrRNeBzDHt/4ByqE=
