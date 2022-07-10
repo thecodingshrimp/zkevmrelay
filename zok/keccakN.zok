@@ -83,10 +83,6 @@ def keccakf(u64[25] st) -> u64[25]:
     return st
 
 def main<N, W>(u64[N] input, u64 pad) -> u64[W]:
-    // TODO what if input size % rate == 0? -> no padding -> restructure code.
-    // TODO or if input size % rate == 0 and there is padding.
-    // E.g. 544byte = u64[68] input -> needs no padding
-    // for reference see https://github.com/davidsteinsland/keccak/blob/master/keccak.c
     u64[25] q = [0; 25]
     u32 rate = (200 - (W * 16)) / 8
     u32 pt = 0
@@ -97,6 +93,7 @@ def main<N, W>(u64[N] input, u64 pad) -> u64[W]:
     endfor
 
     // add padding if necessary
+    // for reference see https://github.com/davidsteinsland/keccak/blob/master/keccak.c
     input[N - 1] = pad != 0x0000000000000001 ? input[N - 1] ^ pad : input[N - 1]
     input[N - 1] = N % rate == 0 && pad != 0x0000000000000001 ? input[N - 1] ^ 0x8000000000000000 : input[N - 1]
 
