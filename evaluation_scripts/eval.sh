@@ -46,7 +46,7 @@ echo "Done."
 echo "batch size,memory (kbytes),time,mt hash function" > ./../evaluation_results/${evalDir}/compile.xlsx
 echo "batch size,mt hash function,constraints" > ./../evaluation_results/${evalDir}/constraints.xlsx
 echo "batch size,memory (kbytes),time,proving scheme,backend,mt hash function" > ./../evaluation_results/${evalDir}/setup.xlsx
-echo "batch size,memory (kbytes),time,exponent of size (2**n)" > ./../evaluation_results/${evalDir}/universal_setup.xlsx
+echo "exponent of size (2**n),memory (kbytes),time" > ./../evaluation_results/${evalDir}/universal_setup.xlsx
 echo "batch size,memory (kbytes),time,mt hash function" > ./../evaluation_results/${evalDir}/compute_witness.xlsx
 echo "batch size,memory (kbytes),time,proving scheme,backend,mt hash function" > ./../evaluation_results/${evalDir}/generate_proof.xlsx
 
@@ -54,9 +54,9 @@ echo "Universal Setup"
 # 0. universal-setup for marlin + ark
 for universal_setup_exponent in "${universal_setup_exponents[@]}"
 do
-    ${time_exec} ${timeOutput}/universal_setup.xlsx -f "$curr_batch_size, ${timeFormat}, ${universal_setup_exponent}" \
+    ${time_exec} ${timeOutput}/universal_setup.xlsx -f "${universal_setup_exponent}, $curr_batch_size, ${timeFormat}" \
      ${zok_exec} universal-setup \
-     -n $universal_setup_exponent
+     -n $universal_setup_exponent \
      -u ${zok_dir}/output/universal_setups/universal_setup_${universal_setup_exponent}.dat
 done
 echo "Done."
@@ -111,7 +111,7 @@ do
             do
                 ${time_exec} ${timeOutput}/setup.xlsx -f "${curr_batch_size}, ${timeFormat}, ${proving_scheme}, ark, ${hash_function}" \
                  ${zok_exec} setup \
-                  -u ${zok_dir}/output/universal_setups/universal_setup_${universal_setup_array[$i]}.dat
+                  -u ${zok_dir}/output/universal_setups/universal_setup_${universal_setup_array[$i]}.dat \
                   -i ${zok_dir}/output/programs/batch_verifier_${curr_batch_size}_${hash_function} \
                   -p ${zok_dir}/output/keys/proving_key_batch_verifier_${curr_batch_size}_${hash_function}_ark_${proving_scheme}.key \
                   -v ${zok_dir}/output/keys/verification_key_batch_verifier_${curr_batch_size}_${hash_function}_ark_${proving_scheme}.key \
@@ -150,7 +150,7 @@ do
             do
                 ${time_exec} ${timeOutput}/generate_proof.xlsx -f "${curr_batch_size}, ${timeFormat}, ${proving_scheme}, ark, ${hash_function}" \
                  ${zok_exec} generate-proof \
-                  -u ${zok_dir}/output/universal_setups/universal_setup_${universal_setup_array[$i]}.dat
+                  -u ${zok_dir}/output/universal_setups/universal_setup_${universal_setup_array[$i]}.dat \
                   -i ${zok_dir}/output/programs/batch_verifier_${curr_batch_size}_${hash_function} \
                   -w ${zok_dir}/output/witnesses/witness_batch_verifier_${curr_batch_size}_${hash_function} \
                   -p ${zok_dir}/output/keys/proving_key_batch_verifier_${curr_batch_size}_${hash_function}_ark_${proving_scheme}.key \
@@ -163,13 +163,13 @@ do
         # 5. export verifier
         # 5.1 backend bellman
         ${zok_exec} export-verifier \
-         -i ${zok_dir}/output/keys/verification_key_batch_verifier_${curr_batch_size}_${hash_function}_bellman_g16.key
+         -i ${zok_dir}/output/keys/verification_key_batch_verifier_${curr_batch_size}_${hash_function}_bellman_g16.key \
          -o ${contract_dir}/verifier_${curr_batch_size}_${hash_function}_bellman_g16.sol
         # 5.2 backend ark
         for proving_scheme in "${proving_schemes[@]}"
         do
             ${zok_exec} export-verifier \
-             -i ${zok_dir}/output/keys/verification_key_batch_verifier_${curr_batch_size}_${hash_function}_ark_${proving_scheme}.key
+             -i ${zok_dir}/output/keys/verification_key_batch_verifier_${curr_batch_size}_${hash_function}_ark_${proving_scheme}.key \
              -o ${contract_dir}/verifier_${curr_batch_size}_${hash_function}_ark_${proving_scheme}.sol
         done
     done
@@ -222,7 +222,7 @@ then
         do
             ${time_exec} ${timeOutput}/setup.xlsx -f "${curr_batch_size}, ${timeFormat}, ${proving_scheme}, ark, ${hash_function}" \
                 ${zok_exec} setup \
-                -u ${zok_dir}/output/universal_setups/universal_setup_${universal_setup_array[$i]}.dat
+                -u ${zok_dir}/output/universal_setups/universal_setup_${universal_setup_array[$i]}.dat \
                 -i ${zok_dir}/output/programs/batch_verifier_${curr_batch_size}_${hash_function} \
                 -p ${zok_dir}/output/keys/proving_key_batch_verifier_${curr_batch_size}_${hash_function}_ark_${proving_scheme}.key \
                 -v ${zok_dir}/output/keys/verification_key_batch_verifier_${curr_batch_size}_${hash_function}_ark_${proving_scheme}.key \
@@ -261,7 +261,7 @@ then
         do
             ${time_exec} ${timeOutput}/generate_proof.xlsx -f "${curr_batch_size}, ${timeFormat}, ${proving_scheme}, ark, ${hash_function}" \
                 ${zok_exec} generate-proof \
-                -u ${zok_dir}/output/universal_setups/universal_setup_${universal_setup_array[$MAX_BATCH_SIZE]}.dat
+                -u ${zok_dir}/output/universal_setups/universal_setup_${universal_setup_array[$MAX_BATCH_SIZE]}.dat \
                 -i ${zok_dir}/output/programs/batch_verifier_${curr_batch_size}_${hash_function} \
                 -w ${zok_dir}/output/witnesses/witness_batch_verifier_${curr_batch_size}_${hash_function} \
                 -p ${zok_dir}/output/keys/proving_key_batch_verifier_${curr_batch_size}_${hash_function}_ark_${proving_scheme}.key \
@@ -274,13 +274,13 @@ then
     # 5. export verifier
     # 5.1 backend bellman
     ${zok_exec} export-verifier \
-        -i ${zok_dir}/output/keys/verification_key_batch_verifier_${curr_batch_size}_${hash_function}_bellman_g16.key
+        -i ${zok_dir}/output/keys/verification_key_batch_verifier_${curr_batch_size}_${hash_function}_bellman_g16.key \
         -o ${contract_dir}/verifier_${curr_batch_size}_${hash_function}_bellman_g16.sol
     # 5.2 backend ark
     for proving_scheme in "${proving_schemes[@]}"
     do
         ${zok_exec} export-verifier \
-            -i ${zok_dir}/output/keys/verification_key_batch_verifier_${curr_batch_size}_${hash_function}_ark_${proving_scheme}.key
+            -i ${zok_dir}/output/keys/verification_key_batch_verifier_${curr_batch_size}_${hash_function}_ark_${proving_scheme}.key \
             -o ${contract_dir}/verifier_${curr_batch_size}_${hash_function}_ark_${proving_scheme}.sol
     done
 fi
