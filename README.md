@@ -8,3 +8,6 @@ We need ZoKrates to compile our zk-SNARK programs, generate proof and verificati
 
 We use
 [ZoKrates](https://zokrates.github.io/gettingstarted.html) version 0.7.14.
+
+### Geth
+We use [geth](https://github.com/ethereum/go-ethereum) version 1.9.25-stable-e7872729

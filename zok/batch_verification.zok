@@ -1,14 +1,19 @@
 import "./verify_header.zok" as verify_header
 import "./full_header_hash" as full_header_hash
+import "./batch_mt_root_generator_poseidon" as batch_mt_root_generator
 
 const u32 BATCH_SIZE = 1
-def main(u64 parent_difficulty, u64 parent_time, u64[4] parent_hash, private u64[BATCH_SIZE][71] rlp_headers, private u32[BATCH_SIZE][64][32] values, private u32[BATCH_SIZE][64] indexes, private u32[BATCH_SIZE][64][24][8] proofs) -> (u64[4]):
+// should equal height in a perfect full binary tree with all blocks included
+const u32 BATCH_MT_HEIGHT = 1
+def main(u64 parent_difficulty, u64 parent_time, u64[4] parent_hash, private u64[BATCH_SIZE][71] rlp_headers, private u32[BATCH_SIZE][64][32] values, private u32[BATCH_SIZE][64] indexes, private u32[BATCH_SIZE][64][24][8] proofs) -> (u64[4], u64, u64, u32[8]):
     u64 curr_parent_diff = parent_difficulty
     u64 curr_parent_time = parent_time
     u32 block_header_byte_length_with_rlp = 0
     u64[4] curr_parent_hash = parent_hash
+    u64[BATCH_SIZE][4] block_hashes = [[0; 4]; BATCH_SIZE]
     for u32 i in 0..BATCH_SIZE do
         block_header_byte_length_with_rlp, curr_parent_diff, curr_parent_time = verify_header(curr_parent_diff, curr_parent_time, curr_parent_hash, rlp_headers[i], values[i], indexes[i], proofs[i])
-        curr_parent_hash = full_header_hash(rlp_headers[i], block_header_byte_length_with_rlp)
+        block_hashes[i] = full_header_hash(rlp_headers[i], block_header_byte_length_with_rlp)
+        curr_parent_hash = block_hashes[i]
     endfor
-    return curr_parent_hash
+    return curr_parent_hash, curr_parent_diff, curr_parent_time, batch_mt_root_generator::<BATCH_SIZE, BATCH_MT_HEIGHT>(block_hashes)

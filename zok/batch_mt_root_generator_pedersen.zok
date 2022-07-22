@@ -1,0 +1,40 @@
+import "utils/casts/u64_to_bits.zok" as u64_to_bits
+import "utils/casts/u32_from_bits.zok" as u32_from_bits
+import "utils/casts/field_to_u32.zok" as field_to_u32
+import "hashes/pedersen/512bit.zok" as pedersen
+
+def u64_to_u32_block_hash(u64[4] block_hash) -> u32[8]:
+    u32[8] block_hash_u32 = [0; 8]
+
+    for u32 i in 0..4 do
+        bool[64] curr_hash_bits = u64_to_bits(block_hash[i])
+        block_hash_u32[i * 2] = u32_from_bits(curr_hash_bits[0..32])
+        block_hash_u32[i * 2 + 1] = u32_from_bits(curr_hash_bits[32..64])
+    endfor
+
+    return block_hash_u32
+
+def main<N, Height>(u64[N][4] block_hashes) -> u32[8]:
+    field nodes_field = (2 ** (Height + 1)) - 1
+    field leafs_field = (2 ** Height)
+    u32 nodes = field_to_u32(nodes_field)
+    u32 leafs = field_to_u32(leafs_field)
+    u32[nodes][8] mt = [[0; 8]; nodes]
+    // insert blocks into mt
+    for u32 i in 0..N do
+        mt[nodes-leafs+i] = u64_to_u32_block_hash(block_hashes[i])
+    endfor
+
+    // hash leafs
+    for u32 i in 0..leafs do
+        mt[nodes-leafs+i] = pedersen([...[0; 8], ...mt[nodes-leafs+i]])
+    endfor
+
+    // calc mt root
+    field end_field = leafs_field-1
+    u32 end = field_to_u32(end_field)
+    for u32 i in 0..end do
+        mt[end-i-1] = pedersen([...mt[(end-i-1)*2+1], ...mt[(end-i-1)*2+2]])
+    endfor
+    
+    return mt[0]

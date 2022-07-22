@@ -1,0 +1,47 @@
+import "utils/casts/u64_to_bits.zok" as u64_to_bits
+import "utils/casts/field_to_u32.zok" as field_to_u32
+import "hashes/poseidon/poseidon.zok" as poseidon
+import "utils/casts/bool_array_to_u32_array.zok" as bool_array_to_u32_array
+import "utils/pack/u32/pack256.zok" as u32_pack256
+import "utils/pack/bool/unpack256.zok" as unpack256
+
+def u64_to_field_block_hash(u64[4] block_hash) -> field[2]:
+    field[2] block_hash_field = [0; 2]
+    bool[4][64] block_hash_bool = [[false; 64]; 4]
+
+    // get bits
+    for u32 i in 0..4 do
+        block_hash_bool[i] = u64_to_bits(block_hash[i])
+    endfor
+
+    // convert bits to field
+    block_hash_field[0] = u32_pack256(bool_array_to_u32_array::<_, 8>([...block_hash_bool[0][0..64], ...block_hash_bool[1][0..64], ...block_hash_bool[2][0..64], ...block_hash_bool[3][0..62], false, false]))
+    block_hash_field[1] = u32_pack256(bool_array_to_u32_array::<_, 8>([false, false, ...block_hash_bool[3][62..64], ...[false; 252]]))
+
+    return block_hash_field
+
+def main<N, Height>(u64[N][4] block_hashes) -> u32[8]:
+    field nodes_field = (2 ** (Height + 1)) - 1
+    field leafs_field = (2 ** Height)
+    u32 nodes = field_to_u32(nodes_field)
+    u32 leafs = field_to_u32(leafs_field)
+    field[nodes] mt = [0; nodes]
+
+    // insert blocks into mt
+    for u32 i in 0..N do
+        mt[nodes-leafs+i] = poseidon(u64_to_field_block_hash(block_hashes[i]))
+    endfor
+
+    // hash rest of leafs
+    for u32 i in N..leafs do
+        mt[nodes-leafs+i] = poseidon([mt[nodes-leafs+i]])
+    endfor
+
+    // calc mt root
+    field end_field = leafs_field-1
+    u32 end = field_to_u32(end_field)
+    for u32 i in 0..end do
+        mt[end-i-1] = poseidon([mt[(end-i-1)*2+1], mt[(end-i-1)*2+2]])
+    endfor
+    
+    return bool_array_to_u32_array::<_, 8>(unpack256(mt[0]))
