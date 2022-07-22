@@ -53,7 +53,7 @@ do
         # 1. compile
         # 1.1 adjust batch_verification.zok and witness_hashimoto.zok
         sed -i "s/const u32 BATCH_SIZE = [[:digit:]]/const u32 BATCH_SIZE = ${curr_batch_size}/g" ${zok_dir}/batch_verification.zok
-        sed -i "s/const u32 BATCH_MT_HEIGHT = [[:digit:]]/const u32 BATCH_MT_HEIGHT = ${batch_mt_heights[${curr_batch_size}]}/g" ${zok_dir}/batch_verification.zok
+        sed -i "s/const u32 BATCH_MT_HEIGHT = [[:digit:]]/const u32 BATCH_MT_HEIGHT = ${batch_mt_heights[${i}]}/g" ${zok_dir}/batch_verification.zok
         sed -i "/import/s/batch_mt_root_generator_[a-z]*.zok/batch_mt_root_generator_${hash_function}.zok/g" ${zok_dir}/batch_verification.zok
         sed -i "/import/s/datasetitem_proof_verifier_[a-z]*.zok/datasetitem_proof_verifier_${hash_function}.zok/g" ${zok_dir}/witness_hashimoto.zok
 
