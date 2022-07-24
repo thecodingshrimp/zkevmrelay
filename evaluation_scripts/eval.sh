@@ -18,6 +18,7 @@ zok_exec=~/.zokrates/bin/zokrates
 zok_dir=./../zok
 contract_dir=./../sol/contracts
 go_exec=/home/leo/go/bin/go
+BLOCK_NR=30001
 MAX_BATCH_SIZE=4
 NUM_RERUNS=1
 one_more_pedersen=1
@@ -27,6 +28,7 @@ batch_mt_heights=(0 1 2 2 3)
 universal_setup_exponents_poseidon=(24 25 26 26)
 universal_setup_exponents_pedersen=(26 27 27 28 28)
 universal_setup_exponents=(24 25 26 27 28)
+EPOCH=$((${BLOCK_NR}/30000))
 
 # create new eval dir
 mkdir ./../evaluation_results/${evalDir}
@@ -36,9 +38,9 @@ echo "Generate arguments..."
 for ((i = 0 ; i < ${MAX_BATCH_SIZE} ; i++))
 do
     curr_batch_size=$(($i+1))
-    if [[ ! -e ${zok_dir}/arguments/batch_verifier_${curr_batch_size} ]]
+    if [[ ! -e ${zok_dir}/arguments/batch_verifier_${curr_batch_size}_${EPOCH} ]]
     then
-        ${go_exec} run generate_zok_program_args.go 30001 ${curr_batch_size} > /dev/null 2>&1
+        ${go_exec} run generate_zok_program_args.go ${BLOCK_NR} ${curr_batch_size} > /dev/null 2>&1
     fi
 done
 echo "Done."
@@ -54,7 +56,7 @@ echo "Universal Setup"
 # 0. universal-setup for marlin + ark
 for universal_setup_exponent in "${universal_setup_exponents[@]}"
 do
-    ${time_exec} ${timeOutput}/universal_setup.csv -f "${universal_setup_exponent}, $curr_batch_size, ${timeFormat}" \
+    ${time_exec} ${timeOutput}/universal_setup.csv -f "${universal_setup_exponent}, ${timeFormat}" \
      ${zok_exec} universal-setup \
      -n $universal_setup_exponent \
      -u ${zok_dir}/output/universal_setups/universal_setup_${universal_setup_exponent}.dat
@@ -87,7 +89,7 @@ do
             ${time_exec} ${timeOutput}/compile.csv -f "${curr_batch_size}, ${timeFormat}, ${hash_function}" \
              ${zok_exec} compile \
               -i ${zok_dir}/batch_verification.zok \
-              -o ${zok_dir}/output/programs/batch_verifier_${curr_batch_size}_${hash_function} \
+              -o ${zok_dir}/output/programs/batch_verifier_${curr_batch_size}_${EPOCH}_${hash_function} \
               | echo "${curr_batch_size}, ${hash_function}, `awk 'NR==4{print $4;exit;}'`" >> ./../evaluation_results/${evalDir}/constraints.csv
               # awk expects the number of constraints to come in the 4th line as the 4th token from the stdout from zokrates compile
         done
@@ -99,9 +101,9 @@ do
         do
             ${time_exec} ${timeOutput}/setup.csv -f "${curr_batch_size}, ${timeFormat}, g16, bellman,${hash_function}" \
              ${zok_exec} setup \
-              -i ${zok_dir}/output/programs/batch_verifier_${curr_batch_size}_${hash_function} \
-              -p ${zok_dir}/output/keys/proving_key_batch_verifier_${curr_batch_size}_${hash_function}_bellman_g16.key \
-              -v ${zok_dir}/output/keys/verification_key_batch_verifier_${curr_batch_size}_${hash_function}_bellman_g16.key \
+              -i ${zok_dir}/output/programs/batch_verifier_${curr_batch_size}_${EPOCH}_${hash_function} \
+              -p ${zok_dir}/output/keys/proving_key_batch_verifier_${curr_batch_size}_${EPOCH}_${hash_function}_bellman_g16.key \
+              -v ${zok_dir}/output/keys/verification_key_batch_verifier_${curr_batch_size}_${EPOCH}_${hash_function}_bellman_g16.key \
               --proving-scheme g16 --backend bellman \
               >/dev/null 2>>${zok_dir}/output/errors.txt
         done
@@ -113,9 +115,9 @@ do
                 ${time_exec} ${timeOutput}/setup.csv -f "${curr_batch_size}, ${timeFormat}, ${proving_scheme}, ark, ${hash_function}" \
                  ${zok_exec} setup \
                   -u ${zok_dir}/output/universal_setups/universal_setup_${universal_setup_array[$i]}.dat \
-                  -i ${zok_dir}/output/programs/batch_verifier_${curr_batch_size}_${hash_function} \
-                  -p ${zok_dir}/output/keys/proving_key_batch_verifier_${curr_batch_size}_${hash_function}_ark_${proving_scheme}.key \
-                  -v ${zok_dir}/output/keys/verification_key_batch_verifier_${curr_batch_size}_${hash_function}_ark_${proving_scheme}.key \
+                  -i ${zok_dir}/output/programs/batch_verifier_${curr_batch_size}_${EPOCH}_${hash_function} \
+                  -p ${zok_dir}/output/keys/proving_key_batch_verifier_${curr_batch_size}_${EPOCH}_${hash_function}_ark_${proving_scheme}.key \
+                  -v ${zok_dir}/output/keys/verification_key_batch_verifier_${curr_batch_size}_${EPOCH}_${hash_function}_ark_${proving_scheme}.key \
                   --proving-scheme ${proving_scheme} --backend ark \
               >/dev/null 2>>${zok_dir}/output/errors.txt
             done
@@ -127,9 +129,9 @@ do
         do
             ${time_exec} ${timeOutput}/compute_witness.csv -f "${curr_batch_size}, ${timeFormat}, ${hash_function}" \
              ${zok_exec} compute-witness \
-              -i ${zok_dir}/output/programs/batch_verifier_${curr_batch_size}_${hash_function} \
-              -o ${zok_dir}/output/witnesses/witness_batch_verifier_${curr_batch_size}_${hash_function} \
-              -a $(< ${zok_dir}/arguments/batch_verifier_${curr_batch_size}) \
+              -i ${zok_dir}/output/programs/batch_verifier_${curr_batch_size}_${EPOCH}_${hash_function} \
+              -o ${zok_dir}/output/witnesses/witness_batch_verifier_${curr_batch_size}_${EPOCH}_${hash_function} \
+              -a $(< ${zok_dir}/arguments/batch_verifier_${curr_batch_size}_${EPOCH}) \
               >/dev/null 2>>${zok_dir}/output/errors.txt
         done
 
@@ -140,10 +142,10 @@ do
         do
             ${time_exec} ${timeOutput}/generate_proof.csv -f "${curr_batch_size}, ${timeFormat}, g16, bellman, ${hash_function}" \
              ${zok_exec} generate-proof \
-              -i ${zok_dir}/output/programs/batch_verifier_${curr_batch_size}_${hash_function} \
-              -w ${zok_dir}/output/witnesses/witness_batch_verifier_${curr_batch_size}_${hash_function} \
-              -p ${zok_dir}/output/keys/proving_key_batch_verifier_${curr_batch_size}_${hash_function}_bellman_g16.key \
-              -j ${zok_dir}/output/proofs/proof_batch_verifier_${curr_batch_size}_${hash_function}_bellman_g16 \
+              -i ${zok_dir}/output/programs/batch_verifier_${curr_batch_size}_${EPOCH}_${hash_function} \
+              -w ${zok_dir}/output/witnesses/witness_batch_verifier_${curr_batch_size}_${EPOCH}_${hash_function} \
+              -p ${zok_dir}/output/keys/proving_key_batch_verifier_${curr_batch_size}_${EPOCH}_${hash_function}_bellman_g16.key \
+              -j ${zok_dir}/output/proofs/proof_batch_verifier_${curr_batch_size}_${EPOCH}_${hash_function}_bellman_g16 \
               --proving-scheme g16 --backend bellman \
               >/dev/null 2>>${zok_dir}/output/errors.txt
         done
@@ -154,10 +156,10 @@ do
             do
                 ${time_exec} ${timeOutput}/generate_proof.csv -f "${curr_batch_size}, ${timeFormat}, ${proving_scheme}, ark, ${hash_function}" \
                  ${zok_exec} generate-proof \
-                  -i ${zok_dir}/output/programs/batch_verifier_${curr_batch_size}_${hash_function} \
-                  -w ${zok_dir}/output/witnesses/witness_batch_verifier_${curr_batch_size}_${hash_function} \
-                  -p ${zok_dir}/output/keys/proving_key_batch_verifier_${curr_batch_size}_${hash_function}_ark_${proving_scheme}.key \
-                  -j ${zok_dir}/output/proofs/proof_batch_verifier_${curr_batch_size}_${hash_function}_ark_${proving_scheme} \
+                  -i ${zok_dir}/output/programs/batch_verifier_${curr_batch_size}_${EPOCH}_${hash_function} \
+                  -w ${zok_dir}/output/witnesses/witness_batch_verifier_${curr_batch_size}_${EPOCH}_${hash_function} \
+                  -p ${zok_dir}/output/keys/proving_key_batch_verifier_${curr_batch_size}_${EPOCH}_${hash_function}_ark_${proving_scheme}.key \
+                  -j ${zok_dir}/output/proofs/proof_batch_verifier_${curr_batch_size}_${EPOCH}_${hash_function}_ark_${proving_scheme} \
                   --proving-scheme ${proving_scheme} --backend ark \
                   >/dev/null 2>>${zok_dir}/output/errors.txt
             done
@@ -167,14 +169,14 @@ do
         # 5. export verifier
         # 5.1 backend bellman
         ${zok_exec} export-verifier \
-         -i ${zok_dir}/output/keys/verification_key_batch_verifier_${curr_batch_size}_${hash_function}_bellman_g16.key \
-         -o ${contract_dir}/verifier_${curr_batch_size}_${hash_function}_bellman_g16.sol
+         -i ${zok_dir}/output/keys/verification_key_batch_verifier_${curr_batch_size}_${EPOCH}_${hash_function}_bellman_g16.key \
+         -o ${contract_dir}/verifier_${curr_batch_size}_${EPOCH}_${hash_function}_bellman_g16.sol
         # 5.2 backend ark
         for proving_scheme in "${proving_schemes[@]}"
         do
             ${zok_exec} export-verifier \
-             -i ${zok_dir}/output/keys/verification_key_batch_verifier_${curr_batch_size}_${hash_function}_ark_${proving_scheme}.key \
-             -o ${contract_dir}/verifier_${curr_batch_size}_${hash_function}_ark_${proving_scheme}.sol \
+             -i ${zok_dir}/output/keys/verification_key_batch_verifier_${curr_batch_size}_${EPOCH}_${hash_function}_ark_${proving_scheme}.key \
+             -o ${contract_dir}/verifier_${curr_batch_size}_${EPOCH}_${hash_function}_ark_${proving_scheme}.sol \
              >/dev/null 2>>${zok_dir}/output/errors.txt
         done
     done
@@ -203,7 +205,7 @@ then
         ${time_exec} ${timeOutput}/compile.csv -f "${curr_batch_size}, ${timeFormat}, ${hash_function}" \
             ${zok_exec} compile \
             -i ${zok_dir}/batch_verification.zok \
-            -o ${zok_dir}/output/programs/batch_verifier_${curr_batch_size}_${hash_function} \
+            -o ${zok_dir}/output/programs/batch_verifier_${curr_batch_size}_${EPOCH}_${hash_function} \
             | echo "${curr_batch_size}, ${hash_function}, `awk 'NR==4{print $4;exit;}'`" >> ./../evaluation_results/${evalDir}/constraints.csv
             # awk expects the number of constraints to come in the 4th line as the 4th token from the stdout from zokrates compile
     done
@@ -215,9 +217,9 @@ then
     do
         ${time_exec} ${timeOutput}/setup.csv -f "${curr_batch_size}, ${timeFormat}, g16, bellman,${hash_function}" \
             ${zok_exec} setup \
-            -i ${zok_dir}/output/programs/batch_verifier_${curr_batch_size}_${hash_function} \
-            -p ${zok_dir}/output/keys/proving_key_batch_verifier_${curr_batch_size}_${hash_function}_bellman_g16.key \
-            -v ${zok_dir}/output/keys/verification_key_batch_verifier_${curr_batch_size}_${hash_function}_bellman_g16.key \
+            -i ${zok_dir}/output/programs/batch_verifier_${curr_batch_size}_${EPOCH}_${hash_function} \
+            -p ${zok_dir}/output/keys/proving_key_batch_verifier_${curr_batch_size}_${EPOCH}_${hash_function}_bellman_g16.key \
+            -v ${zok_dir}/output/keys/verification_key_batch_verifier_${curr_batch_size}_${EPOCH}_${hash_function}_bellman_g16.key \
             --proving-scheme g16 --backend bellman \
             > /dev/null 2>>${zok_dir}/errors.txt
     done
@@ -229,9 +231,9 @@ then
             ${time_exec} ${timeOutput}/setup.csv -f "${curr_batch_size}, ${timeFormat}, ${proving_scheme}, ark, ${hash_function}" \
                 ${zok_exec} setup \
                 -u ${zok_dir}/output/universal_setups/universal_setup_${universal_setup_array[$i]}.dat \
-                -i ${zok_dir}/output/programs/batch_verifier_${curr_batch_size}_${hash_function} \
-                -p ${zok_dir}/output/keys/proving_key_batch_verifier_${curr_batch_size}_${hash_function}_ark_${proving_scheme}.key \
-                -v ${zok_dir}/output/keys/verification_key_batch_verifier_${curr_batch_size}_${hash_function}_ark_${proving_scheme}.key \
+                -i ${zok_dir}/output/programs/batch_verifier_${curr_batch_size}_${EPOCH}_${hash_function} \
+                -p ${zok_dir}/output/keys/proving_key_batch_verifier_${curr_batch_size}_${EPOCH}_${hash_function}_ark_${proving_scheme}.key \
+                -v ${zok_dir}/output/keys/verification_key_batch_verifier_${curr_batch_size}_${EPOCH}_${hash_function}_ark_${proving_scheme}.key \
                 --proving-scheme ${proving_scheme} --backend ark \
                 > /dev/null 2>>${zok_dir}/errors.txt
         done
@@ -243,9 +245,9 @@ then
     do
         ${time_exec} ${timeOutput}/compute_witness.csv -f "${curr_batch_size}, ${timeFormat}, ${hash_function}" \
             ${zok_exec} compute-witness \
-            -i ${zok_dir}/output/programs/batch_verifier_${curr_batch_size}_${hash_function} \
-            -o ${zok_dir}/output/witnesses/witness_batch_verifier_${curr_batch_size}_${hash_function} \
-            -a $(< ${zok_dir}/arguments/batch_verifier_${curr_batch_size}) \
+            -i ${zok_dir}/output/programs/batch_verifier_${curr_batch_size}_${EPOCH}_${hash_function} \
+            -o ${zok_dir}/output/witnesses/witness_batch_verifier_${curr_batch_size}_${EPOCH}_${hash_function} \
+            -a $(< ${zok_dir}/arguments/batch_verifier_${curr_batch_size}_${EPOCH}) \
             > /dev/null 2>>${zok_dir}/errors.txt
     done
 
@@ -256,10 +258,10 @@ then
     do
         ${time_exec} ${timeOutput}/generate_proof.csv -f "${curr_batch_size}, ${timeFormat}, g16, bellman, ${hash_function}" \
             ${zok_exec} generate-proof \
-            -i ${zok_dir}/output/programs/batch_verifier_${curr_batch_size}_${hash_function} \
-            -w ${zok_dir}/output/witnesses/witness_batch_verifier_${curr_batch_size}_${hash_function} \
-            -p ${zok_dir}/output/keys/proving_key_batch_verifier_${curr_batch_size}_${hash_function}_bellman_g16.key \
-            -j ${zok_dir}/output/proofs/proof_batch_verifier_${curr_batch_size}_${hash_function}_bellman_g16 \
+            -i ${zok_dir}/output/programs/batch_verifier_${curr_batch_size}_${EPOCH}_${hash_function} \
+            -w ${zok_dir}/output/witnesses/witness_batch_verifier_${curr_batch_size}_${EPOCH}_${hash_function} \
+            -p ${zok_dir}/output/keys/proving_key_batch_verifier_${curr_batch_size}_${EPOCH}_${hash_function}_bellman_g16.key \
+            -j ${zok_dir}/output/proofs/proof_batch_verifier_${curr_batch_size}_${EPOCH}_${hash_function}_bellman_g16 \
             --proving-scheme g16 --backend bellman \
             > /dev/null 2>>${zok_dir}/errors.txt
     done
@@ -270,10 +272,10 @@ then
         do
             ${time_exec} ${timeOutput}/generate_proof.csv -f "${curr_batch_size}, ${timeFormat}, ${proving_scheme}, ark, ${hash_function}" \
                 ${zok_exec} generate-proof \
-                -i ${zok_dir}/output/programs/batch_verifier_${curr_batch_size}_${hash_function} \
-                -w ${zok_dir}/output/witnesses/witness_batch_verifier_${curr_batch_size}_${hash_function} \
-                -p ${zok_dir}/output/keys/proving_key_batch_verifier_${curr_batch_size}_${hash_function}_ark_${proving_scheme}.key \
-                -j ${zok_dir}/output/proofs/proof_batch_verifier_${curr_batch_size}_${hash_function}_ark_${proving_scheme} \
+                -i ${zok_dir}/output/programs/batch_verifier_${curr_batch_size}_${EPOCH}_${hash_function} \
+                -w ${zok_dir}/output/witnesses/witness_batch_verifier_${curr_batch_size}_${EPOCH}_${hash_function} \
+                -p ${zok_dir}/output/keys/proving_key_batch_verifier_${curr_batch_size}_${EPOCH}_${hash_function}_ark_${proving_scheme}.key \
+                -j ${zok_dir}/output/proofs/proof_batch_verifier_${curr_batch_size}_${EPOCH}_${hash_function}_ark_${proving_scheme} \
                 --proving-scheme ${proving_scheme} --backend ark \
                 > /dev/null 2>>${zok_dir}/errors.txt
         done
@@ -283,14 +285,14 @@ then
     # 5. export verifier
     # 5.1 backend bellman
     ${zok_exec} export-verifier \
-        -i ${zok_dir}/output/keys/verification_key_batch_verifier_${curr_batch_size}_${hash_function}_bellman_g16.key \
-        -o ${contract_dir}/verifier_${curr_batch_size}_${hash_function}_bellman_g16.sol
+        -i ${zok_dir}/output/keys/verification_key_batch_verifier_${curr_batch_size}_${EPOCH}_${hash_function}_bellman_g16.key \
+        -o ${contract_dir}/verifier_${curr_batch_size}_${EPOCH}_${hash_function}_bellman_g16.sol
     # 5.2 backend ark
     for proving_scheme in "${proving_schemes[@]}"
     do
         ${zok_exec} export-verifier \
-            -i ${zok_dir}/output/keys/verification_key_batch_verifier_${curr_batch_size}_${hash_function}_ark_${proving_scheme}.key \
-            -o ${contract_dir}/verifier_${curr_batch_size}_${hash_function}_ark_${proving_scheme}.sol
+            -i ${zok_dir}/output/keys/verification_key_batch_verifier_${curr_batch_size}_${EPOCH}_${hash_function}_ark_${proving_scheme}.key \
+            -o ${contract_dir}/verifier_${curr_batch_size}_${EPOCH}_${hash_function}_ark_${proving_scheme}.sol
     done
 fi
 

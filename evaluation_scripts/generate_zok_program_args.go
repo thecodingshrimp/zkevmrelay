@@ -17,7 +17,7 @@ const (
 )
 
 func main() {
-	logger, _ := zap.NewProduction()
+	logger, _ := zap.NewDevelopment()
 	sugar := logger.Sugar()
 	if len(os.Args) != 3 {
 		sugar.Fatalw("Usage: program <block_nr> <max_batch_size>")
@@ -42,7 +42,7 @@ func main() {
 		zkProgramArguments := ethash.GenerateZokratesBatchParameters(uint64(BLOCK_NR+i), uint64(i+1), geth, ethash_dir, logger)
 
 		// write arguments to file
-		argumentPath := fmt.Sprintf("%s/arguments/batch_verifier_%d", zok_dir, i+1)
+		argumentPath := fmt.Sprintf("%s/arguments/batch_verifier_%d_epoch_%d", zok_dir, i+1, int(int(BLOCK_NR)/30000))
 
 		err = ioutil.WriteFile(argumentPath, []byte(zkProgramArguments), 0666)
 		if err != nil {
