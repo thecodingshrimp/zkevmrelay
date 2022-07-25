@@ -30,27 +30,29 @@ universal_setup_exponents_pedersen=(26 27 27 28 28)
 universal_setup_exponents=(24 25 26 27 28)
 EPOCH=$((${BLOCK_NR}/30000))
 
-# create new eval dir
-mkdir ./../evaluation_results/${evalDir}
-
 # generate arguments
 echo "Generate arguments..."
 for ((i = 0 ; i < ${MAX_BATCH_SIZE} ; i++))
 do
     curr_batch_size=$(($i+1))
-    if [[ ! -e ${zok_dir}/arguments/batch_verifier_${curr_batch_size}_${EPOCH} ]]
+    if [[ ! -e ${zok_dir}/arguments/batch_verifier_${curr_batch_size}_epoch_${EPOCH} ]]
     then
         ${go_exec} run generate_zok_program_args.go ${BLOCK_NR} ${curr_batch_size} > /dev/null 2>&1
     fi
 done
 echo "Done."
 
-echo "batch size,memory (kbytes),time,mt hash function" > ./../evaluation_results/${evalDir}/compile.csv
-echo "batch size,mt hash function,constraints" > ./../evaluation_results/${evalDir}/constraints.csv
-echo "batch size,memory (kbytes),time,proving scheme,backend,mt hash function" > ./../evaluation_results/${evalDir}/setup.csv
-echo "exponent of size (2**n),memory (kbytes),time" > ./../evaluation_results/${evalDir}/universal_setup.csv
-echo "batch size,memory (kbytes),time,mt hash function" > ./../evaluation_results/${evalDir}/compute_witness.csv
-echo "batch size,memory (kbytes),time,proving scheme,backend,mt hash function" > ./../evaluation_results/${evalDir}/generate_proof.csv
+# create new eval dir and evaluation files
+if [[ ! -d ./../evaluation_results/${evalDir} ]]
+then
+    mkdir ./../evaluation_results/${evalDir}
+    echo "batch size,memory (kbytes),time,mt hash function" > ./../evaluation_results/${evalDir}/compile.csv
+    echo "batch size,mt hash function,constraints" > ./../evaluation_results/${evalDir}/constraints.csv
+    echo "batch size,memory (kbytes),time,proving scheme,backend,mt hash function" > ./../evaluation_results/${evalDir}/setup.csv
+    echo "exponent of size (2**n),memory (kbytes),time" > ./../evaluation_results/${evalDir}/universal_setup.csv
+    echo "batch size,memory (kbytes),time,mt hash function" > ./../evaluation_results/${evalDir}/compute_witness.csv
+    echo "batch size,memory (kbytes),time,proving scheme,backend,mt hash function" > ./../evaluation_results/${evalDir}/generate_proof.csv
+fi
 
 echo "Universal Setup"
 # 0. universal-setup for marlin + ark
@@ -187,6 +189,10 @@ if [[ $one_more_pedersen -eq 1]]
 then
     curr_batch_size=$(($MAX_BATCH_SIZE+1))
     hash_function="pedersen"
+    if [[ ! -e ${zok_dir}/arguments/batch_verifier_${curr_batch_size}_${EPOCH} ]]
+    then
+        ${go_exec} run generate_zok_program_args.go ${BLOCK_NR} ${curr_batch_size} > /dev/null 2>&1
+    fi
     echo "Evaluating one more batch size ($curr_batch_size) with hash function pedersen."
     echo "Compile"
     # 0. get correct universal setup size for marlin + ark
