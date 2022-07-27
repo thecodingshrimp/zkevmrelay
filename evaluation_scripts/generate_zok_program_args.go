@@ -42,7 +42,7 @@ func main() {
 		zkProgramArguments := ethash.GenerateZokratesBatchParameters(uint64(BLOCK_NR+i), uint64(i+1), geth, ethash_dir, logger)
 
 		// write arguments to file
-		argumentPath := fmt.Sprintf("%s/arguments/batch_verifier_%d_epoch_%d", zok_dir, i+1, int(int(BLOCK_NR)/30000))
+		argumentPath := fmt.Sprintf("%s/arguments/batch_verifier_%d_block_%d", zok_dir, i+1, int(BLOCK_NR))
 
 		err = ioutil.WriteFile(argumentPath, []byte(zkProgramArguments), 0666)
 		if err != nil {
