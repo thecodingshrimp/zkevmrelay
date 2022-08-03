@@ -39,7 +39,7 @@ func main() {
 
 	for i := 0; i < MAX_BATCH_SIZE; i++ {
 		// generate parameters for zokrates program
-		zkProgramArguments := ethash.GenerateZokratesBatchParameters(uint64(BLOCK_NR+i), uint64(i+1), geth, ethash_dir, logger)
+		zkProgramArguments := ethash.GenerateZokratesBatchParameters(uint64(BLOCK_NR), uint64(i+1), geth, ethash_dir, logger)
 
 		// write arguments to file
 		argumentPath := fmt.Sprintf("%s/arguments/batch_verifier_%d_block_%d", zok_dir, i+1, int(BLOCK_NR))
