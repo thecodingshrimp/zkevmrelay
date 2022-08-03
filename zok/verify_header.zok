@@ -9,7 +9,7 @@ import "./swap_endianness" as swap_endianness
 // verifies PoW and hashes the block.
 def main(u64 parent_difficulty, u64 parent_time, u64[4] parent_hash, private u64[71] rlp_header, private u32[64][32] values, private u32[64] indexes, private u32[64][24][8] proofs) -> (u32, u64, u64):
     // extract values from rlp_header
-    u32 byte_length_with_rlp, u64[4] extracted_parent_hash, u64 difficulty, u64 time, u64 number, u64[4] header_digest, u64 nonce = rlp_extractor(rlp_header)
+    u32 byte_length_with_rlp, u64[4] extracted_parent_hash, u64 difficulty, u64 time, u64 number, u64[4] header_digest, u64 nonce, u64[4] tx_root = rlp_extractor(rlp_header)
 
     // check correct time, otherwise new block is a future block
     // does not apply to frontier

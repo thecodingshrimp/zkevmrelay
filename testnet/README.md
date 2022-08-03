@@ -1,8 +1,11 @@
 # Custom testnet for target blockchain
 
-## Setup
+## Installation
+
+Need go-ethereum binary.
+
+## Startup
 
 ```bash
-$ geth --config config.toml init testnet-spec.json
-$ geth --config config.toml
+$ bash start.sh
 ```

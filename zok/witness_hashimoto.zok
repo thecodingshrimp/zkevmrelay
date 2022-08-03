@@ -1,5 +1,5 @@
 import "./keccakN.zok" as keccak
-import "./datasetitem_proof_verifier_poseidon.zok" as datasetitem_proof_verification
+import "./datasetitem_proof_verifier_pedersen.zok" as datasetitem_proof_verification
 import "utils/casts/u32_to_bits.zok" as u32_to_bits
 import "utils/casts/u32_from_bits.zok" as u32_from_bits
 import "utils/casts/u64_to_bits.zok" as u64_to_bits

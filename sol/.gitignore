@@ -1,0 +1,12 @@
+node_modules
+.env
+
+#Hardhat files
+cache
+artifacts
+
+#typechain
+src-gen
+
+#generated contracts
+contracts/relay_contract_*

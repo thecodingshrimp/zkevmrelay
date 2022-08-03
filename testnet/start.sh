@@ -1,0 +1,1 @@
+geth --dev --keystore ./keystore --config config.toml --mine --unlock 0x8c1b3c1e494bee03e9c4f210f5dd9c578d9e9ebe,0x63e654e738c253a2cfcf74794ff5afdc8ee09c47,0xbd82fd43721607103d3f5f947b54c234830da5a9 --password ./pwd --allow-insecure-unlock

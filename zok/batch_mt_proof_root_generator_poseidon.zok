@@ -1,0 +1,34 @@
+import "utils/pack/bool/unpack256.zok" as unpack256
+import "utils/pack/u32/pack256.zok" as u32_pack256
+import "utils/casts/u32_to_field.zok" as u32_to_field
+import "utils/casts/bool_array_to_u32_array.zok" as bool_array_to_u32_array
+import "hashes/poseidon/poseidon.zok" as poseidon
+
+// todo pack u32 values correctly into 254bit fields; see u64_to_field_block_hash in batch_mt_root_generator_poseidon
+def u32_to_field_proof<MT_HEIGHT>(u32[MT_HEIGHT][8] proof) -> field[MT_HEIGHT][2]:
+    // need two fields, cause ALT_BN_128 only support 254bit fields
+    field[MT_HEIGHT][2] proof_field = [[0, 0]; MT_HEIGHT]
+    
+    for u32 i in 0..MT_HEIGHT do
+        proof_field[i][0] = u32_to_field(proof[i][0])
+        proof_field[i][1] = u32_pack256([0, ...proof[i][1..8]])
+    endfor
+
+    return proof_field
+
+// returns correct child order of a merkle tree node given the traversal bit of the first value
+def get_child_order(u32 bit, field[3] children) -> field[3]:
+    return bit == 0 ? children : [children[1], children[2], children[0]]
+
+def main<MT_HEIGHT>(u64[4] leaf_value, u32 index, u32[MT_HEIGHT][8] proof) -> u32[8]:
+    u32 curr_bit = 0
+    field hash = poseidon(u64_to_field_block_hash(leaf_value))
+    field[MT_HEIGHT][2] proof_field = u32_to_field_proof(proof)
+
+    for u32 i in 0..MT_HEIGHT do
+        curr_bit = index >> i & 1
+        curr_children = get_child_order(curr_bit, [...hash, ...proof_field[MT_HEIGHT-1-i]])
+        hash = poseidon(curr_children)
+    endfor
+    
+    return bool_array_to_u32_array::<_, 8>(unpack256(hash))
