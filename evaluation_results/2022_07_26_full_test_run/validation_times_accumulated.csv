@@ -1,0 +1,10 @@
+batch size,time, hash function, backend, proving scheme
+1,273,poseidon,bellman,g16
+2,546,poseidon,bellman,g16
+3,871,poseidon,bellman,g16
+4,1058,poseidon,bellman,g16
+1,714,pedersen,bellman,g16
+2,1426,pedersen,bellman,g16
+3,1878,pedersen,bellman,g16
+4,2849,pedersen,bellman,g16
+5,3239,pedersen,bellman,g16

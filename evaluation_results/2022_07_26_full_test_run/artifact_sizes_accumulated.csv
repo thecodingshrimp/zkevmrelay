@@ -1,0 +1,10 @@
+batch size, size (bytes), mt hash function, backend, proving scheme
+1,6800676734,pedersen,bellman,g16
+2,13606942577,pedersen,bellman,g16
+3,19340159140,pedersen,bellman,g16
+4,27221534530,pedersen,bellman,g16
+5,32964415986,pedersen,bellman,g16
+1,2895954903,poseidon,bellman,g16
+2,5796648031,poseidon,bellman,g16
+3,8966395382,poseidon,bellman,g16
+4,11598352166,poseidon,bellman,g16

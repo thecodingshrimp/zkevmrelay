@@ -16,6 +16,7 @@ timeOutput="--append -o ./../evaluation_results/${evalDir}"
 time_exec=/usr/bin/time
 zok_exec=~/.zokrates/bin/zokrates
 zok_dir=./../zok
+zok_output=./../zok
 contract_dir=./../sol/contracts
 go_exec=/home/leo/go/bin/go
 BLOCK_NR=30001
@@ -29,6 +30,7 @@ batch_mt_heights=(0 1 2 2 3)
 universal_setup_exponents_poseidon=(24 25 26 26)
 universal_setup_exponents_pedersen=(26 27 27 28 28)
 universal_setup_exponents=(24 25 26 27 28)
+universal_setup_exponents_hash_map=(["poseidon"]="${universal_setup_exponents_poseidon[@]}" ["pedersen"]="${universal_setup_exponents_pedersen[@]}")
 
 # generate arguments
 echo "Generate arguments..."
@@ -120,8 +122,7 @@ eval_rest() {
         do
             echo "Hash function: ${hash_function}"
             # 0. get correct universal setup size for marlin + ark
-            universal_setup_array=universal_setup_exponents_${hash_function}
-            universal_setup_array=${!universal_setup_array}
+            universal_setup_array=(${universal_setup_exponents_hash_map["${hash_function}"]})
 
             for ((i = 0 ; i < ${max_batch_size} ; i++))
             do
@@ -139,7 +140,7 @@ eval_rest() {
                     ${zok_exec} setup \
                     -u ${zok_dir}/output/universal_setups/universal_setup_${universal_setup_array[$i]}.dat \
                     -i ${zok_dir}/output/programs/${program} \
-                    -p ${zok_dir}/output/keys/${proving_key} \
+                    -p ${zok_output}/keys/${proving_key} \
                     -v ${zok_dir}/output/keys/${verification_key} \
                     --proving-scheme ${proving_scheme} --backend ${backend} \
                     >/dev/null 2>>${zok_dir}/output/errors.txt
@@ -165,7 +166,7 @@ eval_rest() {
                     ${zok_exec} generate-proof \
                     -i ${zok_dir}/output/programs/${program} \
                     -w ${zok_dir}/output/witnesses/witness_batch_verifier_${curr_batch_size}_${hash_function} \
-                    -p ${zok_dir}/output/keys/${proving_key} \
+                    -p ${zok_output}/keys/${proving_key} \
                     -j ${zok_dir}/output/proofs/proof_batch_verifier_${curr_batch_size}_${hash_function}_${backend}_${proving_scheme}.json \
                     --proving-scheme ${proving_scheme} --backend ${backend} \
                     >/dev/null 2>>${zok_dir}/output/errors.txt

@@ -1,0 +1,10 @@
+batch size,mt hash function,constraints
+1, poseidon, 3236505
+2, poseidon, 6472331
+3, poseidon, 9708394
+4, poseidon, 12943983
+1, pedersen, 9545250
+2, pedersen, 19089821
+3, pedersen, 28634629
+4, pedersen, 38178963
+5, pedersen, 47724008

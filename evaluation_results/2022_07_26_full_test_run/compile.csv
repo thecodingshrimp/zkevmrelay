@@ -1,0 +1,10 @@
+batch size,memory (kbytes),time,mt hash function
+1, 54372444, 21:52.05, poseidon
+2, 108673220, 47:13.37, poseidon
+3, 171226208, 1:14:49, poseidon
+4, 216782520, 1:43:54, poseidon
+1, 44879012, 22:22.49, pedersen
+2, 89709732, 56:54.28, pedersen
+3, 134201068, 1:27:15, pedersen
+4, 179512784, 1:56:45, pedersen
+5, 224379972, 2:26:43, pedersen

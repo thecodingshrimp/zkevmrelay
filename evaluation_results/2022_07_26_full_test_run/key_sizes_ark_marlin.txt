@@ -1,0 +1,8 @@
+-rw-rw-r-- 1 leo leo 36439146437 Aug  4 16:53 proving_key_batch_verifier_1_pedersen_ark_marlin.key
+-rw-rw-r-- 1 leo leo 18346767973 Aug  3 20:58 proving_key_batch_verifier_1_poseidon_ark_marlin.key
+-rw-rw-r-- 1 leo leo 36693604621 Aug  6 08:12 proving_key_batch_verifier_2_poseidon_ark_marlin.key
+-rw-rw-r-- 1 leo leo 37860845973 Aug  7 22:38 proving_key_batch_verifier_3_poseidon_ark_marlin.key
+-rw-rw-r-- 1 leo leo        9460 Aug  4 16:52 verification_key_batch_verifier_1_pedersen_ark_marlin.key
+-rw-rw-r-- 1 leo leo        9422 Aug  3 20:57 verification_key_batch_verifier_1_poseidon_ark_marlin.key
+-rw-rw-r-- 1 leo leo        9461 Aug  6 08:11 verification_key_batch_verifier_2_poseidon_ark_marlin.key
+-rw-rw-r-- 1 leo leo        9437 Aug  7 22:37 verification_key_batch_verifier_3_poseidon_ark_marlin.key
