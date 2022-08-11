@@ -1,0 +1,14 @@
+import "./full_header_hash.zok" as full_header_hash
+import "./rlp_extractor.zok" as rlp_extractor
+import "./batch_mt_proof_root_generator_pedersen.zok" as batch_mt_proof_root_generator
+
+const u32 MT_HEIGHT = 1
+
+def main(private u64[71] rlp_header, private u32 index, private u32[MT_HEIGHT][8] proof) -> (u32[8], u64[4]):
+    // extract values from rlp_header
+    u32 byte_length_with_rlp, u64[4] extracted_parent_hash, u64 difficulty, u64 time, u64 number, u64[4] header_digest, u64 nonce, u64[4] txRoot = rlp_extractor(rlp_header)
+    u64[4] calc_header_hash = full_header_hash(rlp_header, byte_length_with_rlp)
+
+    u32[8] mt_root = batch_mt_proof_root_generator(calc_header_hash, index, proof)
+
+    return mt_root, txRoot

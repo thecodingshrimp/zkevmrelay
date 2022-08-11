@@ -28,7 +28,7 @@ GasFloor = 8000000
 GasCeil = 8000000
 GasPrice = 1000000000
 Recommit = 3000000000
-Noverify = false
+Noverify = true
 
 [Eth.Ethash]
 CacheDir = "ethash"
@@ -64,11 +64,11 @@ DataDir = "."
 InsecureUnlockAllowed = true
 IPCPath = "geth.ipc"
 HTTPHost = "127.0.0.1"
-HTTPPort = 8545
+HTTPPort = 9545
 HTTPVirtualHosts = ["localhost"]
 HTTPModules = ["admin", "debug", "web3", "eth", "txpool", "personal", "miner", "net"]
 WSHost = "127.0.0.1"
-WSPort = 8546
+WSPort = 9546
 WSModules = ["admin", "debug", "web3", "eth", "txpool", "personal", "miner", "net"]
 GraphQLVirtualHosts = ["localhost"]
 

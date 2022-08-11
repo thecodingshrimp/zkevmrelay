@@ -1,0 +1,28 @@
+import "hashes/pedersen/512bit.zok" as pedersen
+import "utils/casts/u64_to_bits.zok" as u64_to_bits
+import "utils/casts/u32_from_bits.zok" as u32_from_bits
+
+def u64_to_u32_block_hash(u64[4] block_hash) -> u32[8]:
+    u32[8] block_hash_u32 = [0; 8]
+
+    for u32 i in 0..4 do
+        bool[64] curr_hash_bits = u64_to_bits(block_hash[i])
+        block_hash_u32[i * 2] = u32_from_bits(curr_hash_bits[0..32])
+        block_hash_u32[i * 2 + 1] = u32_from_bits(curr_hash_bits[32..64])
+    endfor
+
+    return block_hash_u32
+
+def get_child_order(u32 bit, u32[16] children) -> u32[16]:
+    return bit == 0 ? children : [...children[8..16], ...children[0..8]]
+
+def main<MT_HEIGHT>(u64[4] leaf_value, u32 index, u32[MT_HEIGHT][8] proof) -> u32[8]:
+    u32 curr_bit = 0
+    u32[8] hash = pedersen([...[0; 8], ...u64_to_u32_block_hash(leaf_value)])
+    u32[16] curr_children = [0; 16]
+    for u32 i in 0..MT_HEIGHT do
+        curr_bit = index >> i & 1
+        curr_children = get_child_order(curr_bit, [...hash, ...proof[MT_HEIGHT-1-i]])
+        hash = pedersen(curr_children)
+    endfor
+    return hash
