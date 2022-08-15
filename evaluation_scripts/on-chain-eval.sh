@@ -32,7 +32,7 @@ generate_contracts() {
             curr_verifer_contract_name="verifier_${curr_batch_size}_${hash_function}_${backend}_${proving_scheme}.sol"
             cp ./contracts/relay_contract.sol ./contracts/${curr_contract_name}
             # replace verifier import
-            sed -i "/import/s/verifier_batch_[[:digit:]]_[a-z]*_[a-z]*_[a-z0-9]*.sol/${curr_verifer_contract_name}/g" ./contracts/${curr_contract_name}
+            sed -i "/import/s/verifier_[[:digit:]]_[a-z]*_[a-z]*_[a-z0-9]*.sol/${curr_verifer_contract_name}/g" ./contracts/${curr_contract_name}
             # replace contract name
             sed -i "/contract/s/RelayContract/RelayContract${curr_batch_size}${hash_function^^}${backend^^}${proving_scheme^^}/g" ./contracts/${curr_contract_name}
 
@@ -53,7 +53,12 @@ generate_contracts ${MAX_BATCH_SIZE} "pedersen" bellman_schemes "bellman"
 generate_contracts $((${MAX_BATCH_SIZE}-1)) "poseidon" bellman_schemes "bellman"
 
 # ark
-# todo
+ark_schemes=("g16" "gm17")
+marlin_scheme=("marlin")
+generate_contracts ${MAX_BATCH_SIZE} "pedersen" ark_schemes "ark"
+generate_contracts $((${MAX_BATCH_SIZE}-1)) "poseidon" ark_schemes "ark"
+generate_contracts 1 "pedersen" marlin_scheme "ark"
+generate_contracts 3 "poseidon" marlin_scheme "ark"
 
 # todo execute tests
 npx hardhat test
