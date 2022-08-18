@@ -27,6 +27,6 @@ batch size,memory (kbytes),time,proving scheme,backend,mt hash function
 4, 154833804, 14:22:58, gm17, ark, pedersen
 5, 185411312, 16:37:37, gm17, ark, pedersen
 1, 52040196, 3:08:05, marlin, ark, poseidon
-1, 106517564, 6:42:41, marlin, ark, pedersen
 2, 104068816, 6:15:59, marlin, ark, poseidon
 3, 109959740, 6:43:09, marlin, ark, poseidon
+1, 106517564, 6:42:41, marlin, ark, pedersen

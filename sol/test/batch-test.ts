@@ -23,14 +23,16 @@ describe('RelayContract', async () => {
     });
     
     it("Should test all batch submissions to an ark based proof", async () => {
-        const provingSchemes = ['G16', 'MARLIN'];
+        // const provingSchemes = ['G16', 'MARLIN'];
+        const provingSchemes = ['G16'];
         const backend = 'ARK';
-        await exec_eval(backend, provingSchemes, 'poseidon', MAX_BATCH_SIZE-1, false)
-        await exec_eval(backend, provingSchemes, 'pedersen', MAX_BATCH_SIZE, false);
 
         // GM17 needs extra care since it requires the inclusion of an additional library (BN256G2)
         await exec_eval(backend, ['GM17'], 'poseidon', MAX_BATCH_SIZE-1, true);
         await exec_eval(backend, ['GM17'], 'pedersen', MAX_BATCH_SIZE, true);
+
+        await exec_eval(backend, provingSchemes, 'pedersen', MAX_BATCH_SIZE, false);
+        await exec_eval(backend, provingSchemes, 'poseidon', MAX_BATCH_SIZE-1, false);
     });
 
     it("Should test all batch submissions from a bellman based proof", async () => {
@@ -49,11 +51,11 @@ describe('RelayContract', async () => {
                 const CurrRelayContractFactory = await hre.ethers.getContractFactory(currRelayContractName, {
                     libraries: enable_bn256g2 ? { BN256G2: bn256g2.address } : {}
                 });
-                const currRelayContract: RelayContract = await CurrRelayContractFactory.deploy();
+                const currRelayContract: RelayContract = await CurrRelayContractFactory.deploy({ gasLimit: 30000000 });
 
                 // submit proof
-                const proofFileName: string = fs.readFileSync(`../zok/output/proofs/proof_batch_verifier_${currBatchSize}_${hash_function.toLowerCase()}_${backend.toLowerCase()}_${provingScheme.toLowerCase()}.json`).toString();
-                const proof: Proof = JSON.parse(proofFileName)
+                const proofFile: string = fs.readFileSync(`../zok/output/proofs/proof_batch_verifier_${currBatchSize}_${hash_function.toLowerCase()}_${backend.toLowerCase()}_${provingScheme.toLowerCase()}.json`).toString();
+                const proof: Proof = JSON.parse(proofFile)
                 const check = await currRelayContract.submitBatch(proof.proof, proof.inputs);
                 const receipt = await check.wait();
                 // logger.info(receipt.gasUsed.toNumber());

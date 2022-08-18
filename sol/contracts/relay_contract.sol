@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 // This file is LGPL3 Licensed
-pragma solidity 0.8.0;
+pragma solidity ^0.8.0;
 
 // todo change import depending on hash function + batch size + other stuff.
-import "./verifier_batch_1_poseidon_ark_gm17.sol" as zkVerifier;
+import "./verifier_1_poseidon_ark_gm17.sol" as zkVerifier;
 import "hardhat/console.sol";
 
 contract RelayContract {
