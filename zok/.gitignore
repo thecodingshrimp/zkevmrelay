@@ -3,3 +3,4 @@
 !*.zok
 !*.md
 !.git*
+!proof_batch_*.json
